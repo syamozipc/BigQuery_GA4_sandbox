@@ -1,273 +1,477 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GA4 × BigQuery テストサイト</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GA4 × BigQuery テストサイト</title>
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FEHSK6QJLE"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-FEHSK6QJLE');
-  </script>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-FEHSK6QJLE"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-FEHSK6QJLE");
+    </script>
 
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f7fa;
-      color: #333;
-      min-height: 100vh;
-    }
-    header {
-      background: #1a73e8;
-      color: white;
-      padding: 24px 40px;
-    }
-    header h1 { font-size: 24px; font-weight: 600; }
-    header p { font-size: 14px; opacity: 0.85; margin-top: 4px; }
-    .container { max-width: 860px; margin: 40px auto; padding: 0 24px; }
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f5f7fa;
+        color: #333;
+        min-height: 100vh;
+      }
+      header {
+        background: #1a73e8;
+        color: white;
+        padding: 24px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      header h1 {
+        font-size: 24px;
+        font-weight: 600;
+      }
+      header p {
+        font-size: 14px;
+        opacity: 0.85;
+        margin-top: 4px;
+      }
 
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 28px 32px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }
-    .card h2 { font-size: 18px; margin-bottom: 16px; color: #1a73e8; }
-    .card p { font-size: 15px; line-height: 1.7; color: #555; margin-bottom: 12px; }
+      .dashboard-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: white;
+        color: #1a73e8;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: opacity 0.15s;
+        white-space: nowrap;
+      }
+      .dashboard-link:hover {
+        opacity: 0.85;
+      }
 
-    .btn-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
-    button {
-      padding: 10px 22px;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-    button:hover { opacity: 0.85; }
-    .btn-primary { background: #1a73e8; color: white; }
-    .btn-success { background: #34a853; color: white; }
-    .btn-warning { background: #fbbc04; color: #333; }
-    .btn-danger  { background: #ea4335; color: white; }
+      .container {
+        max-width: 860px;
+        margin: 40px auto;
+        padding: 0 24px;
+      }
 
-    .log-box {
-      background: #1e1e2e;
-      color: #a6e3a1;
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      border-radius: 8px;
-      padding: 16px;
-      min-height: 120px;
-      max-height: 220px;
-      overflow-y: auto;
-      margin-top: 16px;
-    }
-    .log-box .entry { margin-bottom: 4px; }
-    .log-box .entry .time { color: #89b4fa; }
-    .log-box .entry .name { color: #f38ba8; }
-    .log-box .entry .params { color: #fab387; }
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 28px 32px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      }
+      .card h2 {
+        font-size: 18px;
+        margin-bottom: 16px;
+        color: #1a73e8;
+      }
+      .card p {
+        font-size: 15px;
+        line-height: 1.7;
+        color: #555;
+        margin-bottom: 12px;
+      }
 
-    .badge {
-      display: inline-block;
-      background: #e8f0fe;
-      color: #1a73e8;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 2px 10px;
-      border-radius: 20px;
-      margin-left: 8px;
-    }
+      .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 8px;
+      }
+      button {
+        padding: 10px 22px;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      button:hover {
+        opacity: 0.85;
+      }
+      .btn-primary {
+        background: #1a73e8;
+        color: white;
+      }
+      .btn-success {
+        background: #34a853;
+        color: white;
+      }
+      .btn-warning {
+        background: #fbbc04;
+        color: #333;
+      }
+      .btn-danger {
+        background: #ea4335;
+        color: white;
+      }
 
-    nav { display: flex; gap: 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 24px; }
-    nav a {
-      padding: 10px 20px;
-      text-decoration: none;
-      color: #555;
-      font-size: 15px;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      cursor: pointer;
-    }
-    nav a.active { color: #1a73e8; border-color: #1a73e8; font-weight: 600; }
+      .log-box {
+        background: #1e1e2e;
+        color: #a6e3a1;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        border-radius: 8px;
+        padding: 16px;
+        min-height: 120px;
+        max-height: 220px;
+        overflow-y: auto;
+        margin-top: 16px;
+      }
+      .log-box .entry {
+        margin-bottom: 4px;
+      }
+      .log-box .entry .time {
+        color: #89b4fa;
+      }
+      .log-box .entry .name {
+        color: #f38ba8;
+      }
+      .log-box .entry .params {
+        color: #fab387;
+      }
 
-    .page { display: none; }
-    .page.active { display: block; }
+      .badge {
+        display: inline-block;
+        background: #e8f0fe;
+        color: #1a73e8;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 2px 10px;
+        border-radius: 20px;
+        margin-left: 8px;
+      }
 
-    footer {
-      text-align: center;
-      padding: 32px;
-      color: #999;
-      font-size: 13px;
-    }
-  </style>
-</head>
-<body>
+      nav {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #e0e0e0;
+        margin-bottom: 24px;
+      }
+      nav a {
+        padding: 10px 20px;
+        text-decoration: none;
+        color: #555;
+        font-size: 15px;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        cursor: pointer;
+      }
+      nav a.active {
+        color: #1a73e8;
+        border-color: #1a73e8;
+        font-weight: 600;
+      }
 
-<header>
-  <h1>GA4 × BigQuery テストサイト</h1>
-  <p>測定ID: G-FEHSK6QJLE ｜ イベントを発火させてBigQueryへのデータ流入を確認しよう</p>
-</header>
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
 
-<div class="container">
+      footer {
+        text-align: center;
+        padding: 32px;
+        color: #999;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>GA4 × BigQuery テストサイト</h1>
+        <p>
+          測定ID: G-FEHSK6QJLE ｜
+          イベントを発火させてBigQueryへのデータ流入を確認しよう
+        </p>
+      </div>
+      <a href="./dashboard.html" class="dashboard-link">
+        📊 ダッシュボードを見る
+      </a>
+    </header>
 
-  <!-- ナビゲーション（page_view を発火させる） -->
-  <nav>
-    <a class="active" onclick="showPage('home', 'ホーム', this)">ホーム</a>
-    <a onclick="showPage('products', '商品一覧', this)">商品一覧</a>
-    <a onclick="showPage('contact', 'お問い合わせ', this)">お問い合わせ</a>
-  </nav>
+    <div class="container">
+      <nav>
+        <a class="active" onclick="showPage('home', 'ホーム', this)">ホーム</a>
+        <a onclick="showPage('products', '商品一覧', this)">商品一覧</a>
+        <a onclick="showPage('contact', 'お問い合わせ', this)">お問い合わせ</a>
+      </nav>
 
-  <!-- ホームページ -->
-  <div id="page-home" class="page active">
+      <!-- ホームページ -->
+      <div id="page-home" class="page active">
+        <div class="card">
+          <h2>🎯 このサイトについて</h2>
+          <p>
+            GA4タグが埋め込まれたテスト用ページです。下のボタンを押すと様々なイベントがGA4に送信され、BigQueryに蓄積されます。
+          </p>
+          <p>
+            GA4のリアルタイムレポートと、翌日以降のBigQueryデータで確認してみましょう。右上の「ダッシュボードを見る」からBigQueryのデータを可視化できます。
+          </p>
+        </div>
 
-    <div class="card">
-      <h2>🎯 このサイトについて</h2>
-      <p>GA4タグが埋め込まれたテスト用ページです。下のボタンを押すと様々なイベントがGA4に送信され、BigQueryに蓄積されます。</p>
-      <p>GA4のリアルタイムレポートと、翌日以降のBigQueryデータで確認してみましょう。</p>
+        <div class="card">
+          <h2>🖱️ カスタムイベントを発火させる</h2>
+          <p>
+            ボタンをクリックすると、それぞれのカスタムイベントがGA4に送信されます。
+          </p>
+          <div class="btn-group">
+            <button
+              class="btn-primary"
+              onclick="
+                sendEvent('button_click', {
+                  button_name: '資料ダウンロード',
+                  section: 'hero',
+                })
+              "
+            >
+              資料ダウンロード
+            </button>
+            <button
+              class="btn-success"
+              onclick="sendEvent('sign_up', { method: 'email', plan: 'free' })"
+            >
+              無料登録する
+            </button>
+            <button
+              class="btn-warning"
+              onclick="
+                sendEvent('add_to_cart', {
+                  item_name: 'スタンダードプラン',
+                  price: 5000,
+                  currency: 'JPY',
+                })
+              "
+            >
+              カートに追加
+            </button>
+            <button
+              class="btn-danger"
+              onclick="
+                sendEvent('purchase', {
+                  transaction_id: 'TXN-' + Date.now(),
+                  value: 5000,
+                  currency: 'JPY',
+                })
+              "
+            >
+              購入完了（テスト）
+            </button>
+          </div>
+
+          <div class="log-box" id="event-log">
+            <div class="entry" style="color: #6c7086">
+              // ここにイベントログが表示されます
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>📊 自動計測されるイベント</h2>
+          <p>GA4は以下のイベントを自動的に計測しています（設定不要）：</p>
+          <p>
+            <span class="badge">page_view</span>
+            <span class="badge">session_start</span>
+            <span class="badge">first_visit</span>
+            <span class="badge">scroll</span>
+            <span class="badge">click</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- 商品一覧ページ -->
+      <div id="page-products" class="page">
+        <div class="card">
+          <h2>🛍️ 商品一覧</h2>
+          <p>
+            このページを開くと <strong>page_view</strong> イベントと
+            <strong>view_item</strong> イベントが送信されます。
+          </p>
+          <div class="btn-group">
+            <button
+              class="btn-primary"
+              onclick="
+                sendEvent('view_item', {
+                  item_name: 'ベーシックプラン',
+                  item_category: 'subscription',
+                  price: 3000,
+                })
+              "
+            >
+              ベーシックプラン 詳細
+            </button>
+            <button
+              class="btn-primary"
+              onclick="
+                sendEvent('view_item', {
+                  item_name: 'プロプラン',
+                  item_category: 'subscription',
+                  price: 8000,
+                })
+              "
+            >
+              プロプラン 詳細
+            </button>
+          </div>
+          <div class="log-box" id="event-log-products">
+            <div class="entry" style="color: #6c7086">
+              // クリックするとイベントが表示されます
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- お問い合わせページ -->
+      <div id="page-contact" class="page">
+        <div class="card">
+          <h2>📩 お問い合わせ</h2>
+          <p>フォーム操作でイベントを発火させます。</p>
+          <div style="margin-top: 16px">
+            <input
+              type="text"
+              placeholder="お名前"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 15px;
+                margin-bottom: 10px;
+              "
+              onfocus="
+                sendEvent('form_field_focus', {
+                  field_name: 'name',
+                  form_id: 'contact',
+                })
+              "
+            />
+            <input
+              type="email"
+              placeholder="メールアドレス"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 15px;
+                margin-bottom: 10px;
+              "
+              onfocus="
+                sendEvent('form_field_focus', {
+                  field_name: 'email',
+                  form_id: 'contact',
+                })
+              "
+            />
+            <textarea
+              placeholder="お問い合わせ内容"
+              rows="4"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 15px;
+                margin-bottom: 10px;
+              "
+              onfocus="
+                sendEvent('form_field_focus', {
+                  field_name: 'message',
+                  form_id: 'contact',
+                })
+              "
+            ></textarea>
+            <button
+              class="btn-primary"
+              onclick="
+                sendEvent('form_submit', {
+                  form_id: 'contact',
+                  form_name: 'お問い合わせフォーム',
+                })
+              "
+              style="width: 100%"
+            >
+              送信する
+            </button>
+          </div>
+          <div class="log-box" id="event-log-contact" style="margin-top: 16px">
+            <div class="entry" style="color: #6c7086">
+              // フォーム操作でイベントが発火します
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>🖱️ カスタムイベントを発火させる</h2>
-      <p>ボタンをクリックすると、それぞれのカスタムイベントがGA4に送信されます。</p>
-      <div class="btn-group">
-        <button class="btn-primary" onclick="sendEvent('button_click', {button_name: '資料ダウンロード', section: 'hero'})">
-          資料ダウンロード
-        </button>
-        <button class="btn-success" onclick="sendEvent('sign_up', {method: 'email', plan: 'free'})">
-          無料登録する
-        </button>
-        <button class="btn-warning" onclick="sendEvent('add_to_cart', {item_name: 'スタンダードプラン', price: 5000, currency: 'JPY'})">
-          カートに追加
-        </button>
-        <button class="btn-danger" onclick="sendEvent('purchase', {transaction_id: 'TXN-' + Date.now(), value: 5000, currency: 'JPY'})">
-          購入完了（テスト）
-        </button>
-      </div>
+    <footer>
+      GA4 × BigQuery ハンズオン用テストサイト ｜ 測定ID: G-FEHSK6QJLE
+    </footer>
 
-      <div class="log-box" id="event-log">
-        <div class="entry" style="color:#6c7086;">// ここにイベントログが表示されます</div>
-      </div>
-    </div>
+    <script>
+      function showPage(pageId, pageName, el) {
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll("nav a")
+          .forEach((a) => a.classList.remove("active"));
+        document.getElementById("page-" + pageId).classList.add("active");
+        el.classList.add("active");
+        gtag("event", "page_view", {
+          page_title: pageName,
+          page_location: window.location.href + "#" + pageId,
+        });
+        logEvent("page_view", { page_title: pageName }, "event-log");
+      }
 
-    <div class="card">
-      <h2>📊 自動計測されるイベント</h2>
-      <p>GA4は以下のイベントを自動的に計測しています（設定不要）：</p>
-      <p>
-        <span class="badge">page_view</span>
-        <span class="badge">session_start</span>
-        <span class="badge">first_visit</span>
-        <span class="badge">scroll</span>
-        <span class="badge">click</span>
-      </p>
-    </div>
+      function sendEvent(eventName, params) {
+        gtag("event", eventName, params);
+        ["event-log", "event-log-products", "event-log-contact"].forEach(
+          (id) => {
+            logEvent(eventName, params, id);
+          },
+        );
+      }
 
-  </div>
+      function logEvent(eventName, params, logId) {
+        const box = document.getElementById(logId);
+        if (!box) return;
+        if (box.querySelector('[style*="6c7086"]')) box.innerHTML = "";
+        const time = new Date().toTimeString().slice(0, 8);
+        const entry = document.createElement("div");
+        entry.className = "entry";
+        entry.innerHTML = `<span class="time">[${time}]</span> <span class="name">${eventName}</span> <span class="params">${JSON.stringify(params)}</span>`;
+        box.insertBefore(entry, box.firstChild);
+      }
 
-  <!-- 商品一覧ページ -->
-  <div id="page-products" class="page">
-    <div class="card">
-      <h2>🛍️ 商品一覧</h2>
-      <p>このページを開くと <strong>page_view</strong> イベントと <strong>view_item_list</strong> イベントが送信されます。</p>
-      <div class="btn-group">
-        <button class="btn-primary" onclick="sendEvent('view_item', {item_name: 'ベーシックプラン', item_category: 'subscription', price: 3000})">
-          ベーシックプラン 詳細
-        </button>
-        <button class="btn-primary" onclick="sendEvent('view_item', {item_name: 'プロプラン', item_category: 'subscription', price: 8000})">
-          プロプラン 詳細
-        </button>
-      </div>
-      <div class="log-box" id="event-log-products">
-        <div class="entry" style="color:#6c7086;">// クリックするとイベントが表示されます</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- お問い合わせページ -->
-  <div id="page-contact" class="page">
-    <div class="card">
-      <h2>📩 お問い合わせ</h2>
-      <p>フォーム操作でイベントを発火させます。</p>
-      <div style="margin-top: 16px;">
-        <input type="text" placeholder="お名前" id="contact-name"
-          style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:15px;margin-bottom:10px;"
-          onfocus="sendEvent('form_field_focus', {field_name: 'name', form_id: 'contact'})">
-        <input type="email" placeholder="メールアドレス" id="contact-email"
-          style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:15px;margin-bottom:10px;"
-          onfocus="sendEvent('form_field_focus', {field_name: 'email', form_id: 'contact'})">
-        <textarea placeholder="お問い合わせ内容" rows="4"
-          style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:15px;margin-bottom:10px;"
-          onfocus="sendEvent('form_field_focus', {field_name: 'message', form_id: 'contact'})"></textarea>
-        <button class="btn-primary" onclick="sendEvent('form_submit', {form_id: 'contact', form_name: 'お問い合わせフォーム'})" style="width:100%;">
-          送信する
-        </button>
-      </div>
-      <div class="log-box" id="event-log-contact" style="margin-top:16px;">
-        <div class="entry" style="color:#6c7086;">// フォーム操作でイベントが発火します</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<footer>GA4 × BigQuery ハンズオン用テストサイト ｜ 測定ID: G-FEHSK6QJLE</footer>
-
-<script>
-  // ページ切り替え（page_viewを手動送信）
-  function showPage(pageId, pageName, el) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-    document.getElementById('page-' + pageId).classList.add('active');
-    el.classList.add('active');
-
-    // page_viewイベントを送信
-    gtag('event', 'page_view', {
-      page_title: pageName,
-      page_location: window.location.href + '#' + pageId
-    });
-    logEvent('page_view', {page_title: pageName}, 'event-log');
-  }
-
-  // カスタムイベント送信
-  function sendEvent(eventName, params) {
-    gtag('event', eventName, params);
-
-    // ログBOXに表示
-    const logIds = ['event-log', 'event-log-products', 'event-log-contact'];
-    logIds.forEach(id => {
-      const box = document.getElementById(id);
-      if (box) logEvent(eventName, params, id);
-    });
-  }
-
-  function logEvent(eventName, params, logId) {
-    const box = document.getElementById(logId);
-    if (!box) return;
-
-    // 初回の説明テキストを消す
-    if (box.querySelector('[style*="6c7086"]')) {
-      box.innerHTML = '';
-    }
-
-    const now = new Date();
-    const time = now.toTimeString().slice(0, 8);
-    const paramsStr = JSON.stringify(params, null, 0);
-
-    const entry = document.createElement('div');
-    entry.className = 'entry';
-    entry.innerHTML = `<span class="time">[${time}]</span> <span class="name">${eventName}</span> <span class="params">${paramsStr}</span>`;
-    box.insertBefore(entry, box.firstChild);
-  }
-
-  // 最初のpage_viewログ
-  window.addEventListener('load', () => {
-    logEvent('page_view', {page_title: 'ホーム', page_location: window.location.href}, 'event-log');
-  });
-</script>
-</body>
+      window.addEventListener("load", () => {
+        logEvent(
+          "page_view",
+          { page_title: "ホーム", page_location: window.location.href },
+          "event-log",
+        );
+      });
+    </script>
+  </body>
 </html>

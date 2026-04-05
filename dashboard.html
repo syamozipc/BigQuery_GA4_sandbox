@@ -19,7 +19,6 @@
         min-height: 100vh;
       }
 
-      /* ヘッダー */
       header {
         background: #fff;
         border-bottom: 1px solid #e0e0e0;
@@ -27,6 +26,26 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #555;
+        text-decoration: none;
+        font-size: 14px;
+        padding: 6px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        transition: background 0.15s;
+      }
+      .back-link:hover {
+        background: #f5f5f5;
       }
       header h1 {
         font-size: 20px;
@@ -63,7 +82,6 @@
         background: #f5f5f5;
       }
 
-      /* ログイン画面 */
       #login-screen {
         display: flex;
         flex-direction: column;
@@ -85,7 +103,6 @@
         margin-bottom: 32px;
       }
 
-      /* メインコンテンツ */
       #main {
         display: none;
         padding: 32px;
@@ -93,7 +110,6 @@
         margin: 0 auto;
       }
 
-      /* 日付フィルター */
       .date-filter {
         display: flex;
         align-items: center;
@@ -138,7 +154,6 @@
         cursor: not-allowed;
       }
 
-      /* KPIカード */
       .kpi-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -170,7 +185,6 @@
         color: #aaa;
       }
 
-      /* チャートグリッド */
       .chart-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -193,7 +207,6 @@
         grid-column: 1 / -1;
       }
 
-      /* ローディング */
       .spinner {
         display: inline-block;
         width: 20px;
@@ -211,7 +224,6 @@
         }
       }
 
-      /* エラー */
       .error-box {
         background: #fce8e6;
         border: 1px solid #f5c6c2;
@@ -235,9 +247,12 @@
   </head>
   <body>
     <header>
-      <div>
-        <h1>📊 GA4 Analytics Dashboard</h1>
-        <p>big-query-sample-492309 / analytics_324810718</p>
+      <div class="header-left">
+        <a href="./index.html" class="back-link">← サイトに戻る</a>
+        <div>
+          <h1>📊 GA4 Analytics Dashboard</h1>
+          <p>big-query-sample-492309 / analytics_324810718</p>
+        </div>
       </div>
       <div id="user-info" style="display: none">
         <img id="user-avatar" src="" alt="" />
@@ -271,7 +286,6 @@
     <div id="main">
       <div class="error-box" id="error-box"></div>
 
-      <!-- 日付フィルター -->
       <div class="date-filter">
         <label>期間</label>
         <input type="date" id="date-from" />
@@ -280,7 +294,6 @@
         <button id="btn-fetch" onclick="fetchAll()">データ取得</button>
       </div>
 
-      <!-- KPIカード -->
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="icon">👥</div>
@@ -304,7 +317,6 @@
         </div>
       </div>
 
-      <!-- チャート -->
       <div class="chart-grid">
         <div class="chart-card full">
           <h3>📈 日別ページビュー数</h3>
@@ -315,7 +327,7 @@
           <canvas id="chart-events" height="200"></canvas>
         </div>
         <div class="chart-card">
-          <h3>📱 日別ユニークユーザー</h3>
+          <h3>👥 日別ユニークユーザー</h3>
           <canvas id="chart-daily-users" height="200"></canvas>
         </div>
       </div>
@@ -325,26 +337,22 @@
       const PROJECT_ID = "big-query-sample-492309";
       const DATASET = "analytics_324810718";
       const SCOPE = "https://www.googleapis.com/auth/bigquery.readonly";
+      const CLIENT_ID =
+        "973636857836-8j3p9s89jknl45nsu7459np3gnsudev7.apps.googleusercontent.com";
 
       let accessToken = null;
       let chartDailyPV = null,
         chartEvents = null,
         chartDailyUsers = null;
 
-      // ──────────────────────────────
-      // 認証
-      // ──────────────────────────────
       function onSignIn(credential) {
-        // IDトークンをデコードしてユーザー情報取得
         const payload = JSON.parse(atob(credential.credential.split(".")[1]));
         document.getElementById("user-avatar").src = payload.picture;
         document.getElementById("user-name").textContent = payload.name;
         document.getElementById("user-info").style.display = "flex";
 
-        // アクセストークン（BigQuery呼び出し用）をOAuth2で取得
         const client = google.accounts.oauth2.initTokenClient({
-          client_id:
-            "973636857836-8j3p9s89jknl45nsu7459np3gnsudev7.apps.googleusercontent.com",
+          client_id: CLIENT_ID,
           scope: SCOPE,
           callback: (resp) => {
             if (resp.error) {
@@ -370,9 +378,6 @@
         resetKPIs();
       }
 
-      // ──────────────────────────────
-      // 日付初期値（直近7日）
-      // ──────────────────────────────
       function setDefaultDates() {
         const today = new Date();
         const weekAgo = new Date(today);
@@ -384,14 +389,10 @@
       function formatDate(d) {
         return d.toISOString().slice(0, 10);
       }
-
-      function toSuffix(dateStr) {
-        return dateStr.replace(/-/g, ""); // "2026-04-01" → "20260401"
+      function toSuffix(s) {
+        return s.replace(/-/g, "");
       }
 
-      // ──────────────────────────────
-      // BigQuery クエリ実行
-      // ──────────────────────────────
       async function runQuery(sql) {
         const url = `https://bigquery.googleapis.com/bigquery/v2/projects/${PROJECT_ID}/queries`;
         const res = await fetch(url, {
@@ -413,9 +414,6 @@
         return await res.json();
       }
 
-      // ──────────────────────────────
-      // 全データ取得
-      // ──────────────────────────────
       async function fetchAll() {
         const from = document.getElementById("date-from").value;
         const to = document.getElementById("date-to").value;
@@ -450,7 +448,6 @@
         }
       }
 
-      // KPI集計
       async function fetchKPIs(table, filter) {
         const sql = `
       SELECT
@@ -482,7 +479,6 @@
           .forEach((el) => el.classList.remove("loading"));
       }
 
-      // 日別PV
       async function fetchDailyPV(table, filter) {
         const sql = `
       SELECT event_date, COUNT(*) AS pv
@@ -507,7 +503,6 @@
         );
       }
 
-      // イベント別件数
       async function fetchEventCounts(table, filter) {
         const sql = `
       SELECT event_name, COUNT(*) AS cnt
@@ -528,7 +523,6 @@
         );
       }
 
-      // 日別ユーザー
       async function fetchDailyUsers(table, filter) {
         const sql = `
       SELECT event_date, COUNT(DISTINCT user_pseudo_id) AS users
@@ -553,9 +547,6 @@
         );
       }
 
-      // ──────────────────────────────
-      // チャート描画
-      // ──────────────────────────────
       function renderLine(id, existing, labels, data, label, color, setter) {
         if (existing) existing.destroy();
         const ctx = document.getElementById(id).getContext("2d");
@@ -580,9 +571,7 @@
             options: {
               responsive: true,
               plugins: { legend: { display: false } },
-              scales: {
-                y: { beginAtZero: true, ticks: { precision: 0 } },
-              },
+              scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
             },
           }),
         );
@@ -620,17 +609,12 @@
               indexAxis: "y",
               responsive: true,
               plugins: { legend: { display: false } },
-              scales: {
-                x: { beginAtZero: true, ticks: { precision: 0 } },
-              },
+              scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
             },
           }),
         );
       }
 
-      // ──────────────────────────────
-      // ユーティリティ
-      // ──────────────────────────────
       function resetKPIs() {
         ["kpi-users", "kpi-sessions", "kpi-pageviews", "kpi-events"].forEach(
           (id) => {
