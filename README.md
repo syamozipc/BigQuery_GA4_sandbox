@@ -20,6 +20,8 @@ BigQueryとGA4を学習するために作ったリポジトリ。
 **Looker Studio**: https://lookerstudio.google.com/reporting/3c89940d-f869-47be-a135-97fee528fcda/page/j5EuF
 <br />
 Big Query: https://console.cloud.google.com/bigquery?project=big-query-sample-492309
+<br />
+Google Analytics: https://analytics.google.com/analytics/web/#/a235761773p324810718/reports/intelligenthome?params=_u..nav%3Dmaui
 
 ---
 
