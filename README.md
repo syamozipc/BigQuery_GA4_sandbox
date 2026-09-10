@@ -9,13 +9,16 @@ BigQueryとGA4を学習するために作ったリポジトリ。
 
 ```
 /
-├── index.html        # GA4タグ入りのテストサイト
-└── dashboard.html    # BigQueryデータを表示するダッシュボード
+├── index.html        # GA4タグ入りのテストサイト（仮ユーザーIDの切り替え付き）
+├── dashboard.html    # BigQueryデータを表示するダッシュボード（翌日以降）
+└── realtime.html     # GA4 Data APIで過去30分をユーザー単位で表示
 ```
 
 **テストサイト**: https://syamozipc.github.io/BigQuery_GA4_sandbox/
 <br />
 **ダッシュボード**: https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html
+<br />
+**リアルタイムダッシュボード**: https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html
 <br />
 **Looker Studio**: https://lookerstudio.google.com/reporting/3c89940d-f869-47be-a135-97fee528fcda/page/j5EuF
 <br />
@@ -184,6 +187,91 @@ Googleが提供する無料のBIツール。BigQueryと直接繋がり、SQLの�
 - BigQueryのデータが更新されるとレポートにも反映される
 - URLで共有でき、Googleアカウントでアクセス制御が可能
 - 社内ダッシュボードとして使うには十分な機能を無料で使える
+
+---
+
+### 8. ユーザー単位の計測（User-ID / user_properties）
+
+ユーザーごとにデータを見たい場合、UUIDなどの自前IDを2通りの形でGA4に送る。値は同じでも役割と使える場所が違う。
+
+| | `user_id` | `user_properties` |
+|---|---|---|
+| 正体 | GA4の予約識別子 | 自作のユーザースコープ属性 |
+| 設定作業 | 管理 → レポートID で有効化 | 管理 → カスタム定義 に登録 |
+| レポートで絞り込み | **できない** | できる（比較・セグメント） |
+| ユーザーエクスプローラ | **できる**（行がUser-IDになる） | — |
+| BigQuery | `user_id` 列 | `user_properties` 列（ARRAY of STRUCT） |
+
+```javascript
+// user_properties は値が36文字までなのでUUIDがちょうど収まる
+gtag("set", "user_properties", {
+  app_user_id: uuid,
+  plan: "pro",
+  user_type: "returning",
+});
+gtag("config", "G-XXXXXXXXXX", { user_id: uuid });
+```
+
+**IDを途中で切り替える場合**: `gtag('config')` を再実行するが、そのままだと `page_view` が重複送信されるので `send_page_view: false` を付ける。
+
+**debug_mode の注意**: 公式ドキュメントには `gtag('config', ID, {debug_mode: true})` で DebugView に出ると書かれているが、実測すると現在の gtag.js は `_dbg=1` ではなく `ep.debug_mode=true`（ただのイベントパラメータ）として送るだけで、DebugViewには現れなかった。DebugViewを使いたい場合は [Tag Assistant](https://tagassistant.google.com) で接続するか、Chrome拡張の Google Analytics Debugger を使う。
+
+---
+
+### 9. GA4管理画面でのユーザー別絞り込み
+
+**準備**: 管理 → データの表示 → **カスタム定義** → カスタムディメンションを作成（範囲=ユーザー、ユーザープロパティ名を指定）。あわせて 管理 → **レポート ID**（旧「レポート用識別子」）で User-ID を優先させる。
+
+| 見たいもの | 場所 | 反映 |
+|---|---|---|
+| ユーザープロパティ別の即時集計 | リアルタイムの概要 → 「アクティブユーザー: **ユーザープロパティ別**」カード | 数秒 |
+| 絞り込んだ数値 | リアルタイム → 「比較を追加」 → 新規作成 | 数秒 |
+| ユーザー個別のイベント履歴 | 探索 → **ユーザーエクスプローラ** | 数時間 |
+| 通常レポートでの集計 | レポート → エンゲージメント → イベント | 最大24〜48時間 |
+
+カスタムディメンションは登録後に収集されたデータのみが対象。ただし**リアルタイムには即反映**され、「最大48時間」がかかるのは通常レポートと探索の方。
+
+GA4 UIのリアルタイムは過去30分固定・カード固定で、任意のディメンション×指標の組み合わせやセグメントは使えない。
+
+---
+
+### 10. GA4 Data APIでリアルタイム分析（realtime.html）
+
+GA4 UIの制約を超えて自由に分析したい場合、Data APIの `runRealtimeReport` を直接叩けば過去30分のデータを任意のディメンション×指標で取得できる。無料。
+
+**準備**: GCPで Google Analytics Data API を有効化し、OAuth同意画面に `analytics.readonly` スコープを追加する。
+
+```javascript
+// ユーザースコープのカスタムディメンションは customUser: プレフィックスで参照する
+const res = await fetch(
+  `https://analyticsdata.googleapis.com/v1beta/properties/${PROPERTY_ID}:runRealtimeReport`,
+  {
+    method: "POST",
+    headers: { Authorization: "Bearer " + accessToken },
+    body: JSON.stringify({
+      dimensions: [{ name: "customUser:app_user_id" }],
+      metrics: [{ name: "activeUsers" }, { name: "eventCount" }],
+      dimensionFilter: {
+        filter: {
+          fieldName: "customUser:app_user_id",
+          stringFilter: { matchType: "EXACT", value: uuid },
+        },
+      },
+    }),
+  },
+);
+```
+
+`minutesAgo` ディメンション（"0"〜"29"）を使うと分単位の推移が取れる。
+
+**ユーザー単位で使う場合の制約**:
+
+- **しきい値**: Googleシグナル有効時、少人数のデータはプライバシー保護で非表示になる
+- **(other) 丸め**: UUIDのようなカーディナリティの高いディメンションは行数上限を超えると `(other)` に集約される
+- **クォータ**: 標準プロパティは1日あたりのトークン上限あり。短間隔ポーリングは要注意
+- **認証**: ブラウザ直叩きはログインした人の権限になる。誰でも見る画面ならサーバー側でサービスアカウントを使う
+
+集計・傾向を見るならAPIで十分だが、特定ユーザーの行動履歴を業務画面に正確に出したいなら、しきい値と `(other)` 丸めで欠損するので BigQueryエクスポートか自社DBの方が確実。
 
 ---
 
