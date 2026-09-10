@@ -15,8 +15,112 @@
       function gtag() {
         dataLayer.push(arguments);
       }
+
+      const MEASUREMENT_ID = "G-FEHSK6QJLE";
+      const STORE_PATTERN = "ga4_sandbox_pattern";
+      const STORE_RANDOM_UUID = "ga4_sandbox_random_uuid";
+      const STORE_DEBUG = "ga4_sandbox_debug";
+
+      // 仮ユーザーのパターン。user_properties の値は36文字までなのでUUIDがちょうど収まる
+      const USER_PATTERNS = [
+        {
+          key: "a",
+          label: "A: 無料プラン / 新規",
+          uuid: "11111111-aaaa-4aaa-8aaa-111111111111",
+          plan: "free",
+          user_type: "new",
+        },
+        {
+          key: "b",
+          label: "B: 有料プラン / リピーター",
+          uuid: "22222222-bbbb-4bbb-8bbb-222222222222",
+          plan: "pro",
+          user_type: "returning",
+        },
+        {
+          key: "c",
+          label: "C: エンタープライズ / 商談中",
+          uuid: "33333333-cccc-4ccc-8ccc-333333333333",
+          plan: "enterprise",
+          user_type: "lead",
+        },
+        {
+          key: "d",
+          label: "D: 解約済み / 休眠",
+          uuid: "44444444-dddd-4ddd-8ddd-444444444444",
+          plan: "churned",
+          user_type: "dormant",
+        },
+        {
+          key: "random",
+          label: "R: ランダム（都度UUID発行）",
+          uuid: null,
+          plan: "free",
+          user_type: "anonymous",
+        },
+      ];
+
+      // crypto.randomUUID は https / localhost でしか使えないのでフォールバックを用意
+      function generateUuid() {
+        if (window.crypto?.randomUUID) return crypto.randomUUID();
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+          const r = (Math.random() * 16) | 0;
+          const v = c === "x" ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        });
+      }
+
+      function store(key, value) {
+        try {
+          localStorage.setItem(key, value);
+        } catch (e) {
+          /* プライベートモード等では永続化できない */
+        }
+      }
+
+      function restore(key) {
+        try {
+          return localStorage.getItem(key);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function randomUuid(forceNew) {
+        let id = forceNew ? null : restore(STORE_RANDOM_UUID);
+        if (!id) {
+          id = generateUuid();
+          store(STORE_RANDOM_UUID, id);
+        }
+        return id;
+      }
+
+      function findPattern(key) {
+        return (
+          USER_PATTERNS.find((p) => p.key === key) || USER_PATTERNS[0]
+        );
+      }
+
+      // 現在のユーザー（パターン + 実際に送るUUID）
+      window.currentUser = (() => {
+        const p = findPattern(restore(STORE_PATTERN) || "a");
+        return { ...p, uuid: p.uuid || randomUuid(false) };
+      })();
+      window.debugMode = restore(STORE_DEBUG) !== "off";
+
       gtag("js", new Date());
-      gtag("config", "G-FEHSK6QJLE");
+      // user_properties = GA4のユーザースコープ カスタムディメンションの元ネタ
+      gtag("set", "user_properties", {
+        app_user_id: window.currentUser.uuid,
+        user_pattern: window.currentUser.key,
+        plan: window.currentUser.plan,
+        user_type: window.currentUser.user_type,
+      });
+      // user_id = GA4の User-ID（レポート用識別子に使われる）
+      gtag("config", MEASUREMENT_ID, {
+        user_id: window.currentUser.uuid,
+        debug_mode: window.debugMode,
+      });
     </script>
 
     <style>
@@ -196,6 +300,114 @@
         color: #999;
         font-size: 13px;
       }
+
+      .user-card {
+        border-left: 4px solid #9c27b0;
+      }
+      .user-card h2 {
+        color: #9c27b0;
+      }
+      .pattern-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .pattern-btn {
+        text-align: left;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 14px;
+        color: #333;
+        line-height: 1.5;
+      }
+      .pattern-btn small {
+        display: block;
+        color: #999;
+        font-size: 12px;
+        font-family: "Courier New", monospace;
+      }
+      .pattern-btn.active {
+        border-color: #9c27b0;
+        background: #f8f4fb;
+        color: #9c27b0;
+        font-weight: 600;
+        box-shadow: 0 0 0 1px #9c27b0 inset;
+      }
+      .pattern-btn.active small {
+        color: #9c27b0;
+      }
+
+      .user-id-box {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        background: #f8f4fb;
+        border: 1px solid #e6d6ee;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 14px;
+      }
+      .user-id-box .label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #9c27b0;
+        margin-right: 8px;
+      }
+      .user-id-box code {
+        font-family: "Courier New", monospace;
+        font-size: 14px;
+        color: #333;
+        word-break: break-all;
+      }
+      .user-id-box .props {
+        font-size: 12px;
+        color: #7b1fa2;
+        font-family: "Courier New", monospace;
+      }
+      .switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #555;
+        cursor: pointer;
+      }
+      .user-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      .btn-sm {
+        padding: 8px 16px;
+        font-size: 13px;
+        background: white;
+        border: 1px solid #ddd;
+        color: #555;
+      }
+      .btn-purple {
+        background: #9c27b0;
+        color: white;
+        border: none;
+      }
+      .user-actions input[type="text"] {
+        flex: 1;
+        min-width: 220px;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+      .note {
+        font-size: 13px;
+        color: #888;
+        margin-top: 12px;
+        line-height: 1.6;
+      }
     </style>
   </head>
   <body>
@@ -213,6 +425,54 @@
     </header>
 
     <div class="container">
+      <!-- 仮ユーザー（User-ID）切り替え -->
+      <div class="card user-card">
+        <h2>👤 仮ユーザーを切り替える</h2>
+        <p>
+          選んだパターンのUUIDを <code>user_id</code> と
+          <code>user_properties</code>（app_user_id / user_pattern / plan /
+          user_type）として全イベントに付けて送信します。
+        </p>
+
+        <div class="pattern-grid" id="pattern-grid"></div>
+
+        <div class="user-id-box">
+          <div>
+            <span class="label">送信中の user_id</span>
+            <code id="current-user-id">—</code>
+          </div>
+          <div id="current-user-props" class="props"></div>
+        </div>
+
+        <div class="user-actions">
+          <button class="btn-sm" onclick="copyUserId()">
+            📋 user_id をコピー
+          </button>
+          <button class="btn-sm" onclick="newRandomUser()">
+            🎲 ランダムUUIDを再発行
+          </button>
+          <label class="switch">
+            <input
+              type="checkbox"
+              id="debug-toggle"
+              onchange="toggleDebugMode(this.checked)"
+            />
+            debug_mode（GA4のDebugViewで即時確認）
+          </label>
+        </div>
+
+        <p class="note">
+          GA4管理画面での確認手順:<br />
+          ① <strong>DebugView</strong>（管理 → DebugView）→ debug_mode
+          ONのデバイスを選ぶと、イベントごとの user_id / user_properties
+          が数秒で見られます。<br />
+          ② <strong>リアルタイム</strong>レポート →
+          「比較を追加」で、カスタム定義に登録した <code>app_user_id</code> や
+          <code>user_pattern</code> でユーザー単位に絞り込めます（要:
+          カスタムディメンション登録）。
+        </p>
+      </div>
+
       <nav>
         <a class="active" onclick="showPage('home', 'ホーム', this)">ホーム</a>
         <a onclick="showPage('products', '商品一覧', this)">商品一覧</a>
@@ -445,8 +705,90 @@
         logEvent("page_view", { page_title: pageName }, "event-log");
       }
 
+      function renderPatterns() {
+        const grid = document.getElementById("pattern-grid");
+        grid.innerHTML = "";
+        USER_PATTERNS.forEach((p) => {
+          const btn = document.createElement("button");
+          btn.className =
+            "pattern-btn" +
+            (p.key === window.currentUser.key ? " active" : "");
+          btn.innerHTML = `${p.label}<small>plan=${p.plan} / type=${p.user_type}</small>`;
+          btn.onclick = () => selectPattern(p.key);
+          grid.appendChild(btn);
+        });
+      }
+
+      function renderUser() {
+        const u = window.currentUser;
+        document.getElementById("current-user-id").textContent = u.uuid;
+        document.getElementById("current-user-props").textContent =
+          `user_pattern=${u.key} / plan=${u.plan} / user_type=${u.user_type}`;
+        document.getElementById("debug-toggle").checked = window.debugMode;
+        renderPatterns();
+      }
+
+      // user_id / user_properties を切り替える。
+      // send_page_view: false で config 再実行による重複PVを防ぐ
+      function applyUser() {
+        const u = window.currentUser;
+        gtag("set", "user_properties", {
+          app_user_id: u.uuid,
+          user_pattern: u.key,
+          plan: u.plan,
+          user_type: u.user_type,
+        });
+        gtag("config", MEASUREMENT_ID, {
+          user_id: u.uuid,
+          debug_mode: window.debugMode,
+          send_page_view: false,
+        });
+        renderUser();
+      }
+
+      function selectPattern(key) {
+        const p = findPattern(key);
+        window.currentUser = { ...p, uuid: p.uuid || randomUuid(false) };
+        store(STORE_PATTERN, key);
+        applyUser();
+        // 切り替え直後に1件送っておくとGA4側で新ユーザーとして見え始める
+        sendEvent("user_switch", {
+          user_pattern: p.key,
+          plan: p.plan,
+          user_type: p.user_type,
+        });
+      }
+
+      function newRandomUser() {
+        const p = findPattern("random");
+        window.currentUser = { ...p, uuid: randomUuid(true) };
+        store(STORE_PATTERN, "random");
+        applyUser();
+        sendEvent("user_switch", {
+          user_pattern: p.key,
+          plan: p.plan,
+          user_type: p.user_type,
+        });
+      }
+
+      function toggleDebugMode(on) {
+        window.debugMode = on;
+        store(STORE_DEBUG, on ? "on" : "off");
+        applyUser();
+        logEvent("debug_mode", { enabled: on }, "event-log");
+      }
+
+      function copyUserId() {
+        navigator.clipboard?.writeText(window.currentUser.uuid);
+      }
+
       function sendEvent(eventName, params) {
-        gtag("event", eventName, params);
+        // event_params にも入れておくとイベント単位でも識別できる
+        gtag("event", eventName, {
+          ...params,
+          app_user_id: window.currentUser.uuid,
+          user_pattern: window.currentUser.key,
+        });
         ["event-log", "event-log-products", "event-log-contact"].forEach(
           (id) => {
             logEvent(eventName, params, id);
@@ -466,9 +808,14 @@
       }
 
       window.addEventListener("load", () => {
+        renderUser();
         logEvent(
           "page_view",
-          { page_title: "ホーム", page_location: window.location.href },
+          {
+            page_title: "ホーム",
+            page_location: window.location.href,
+            user_id: window.currentUser.uuid,
+          },
           "event-log",
         );
       });
