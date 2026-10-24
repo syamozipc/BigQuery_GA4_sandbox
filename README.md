@@ -31,7 +31,7 @@ GA4・GTM・BigQuery を包括的に学ぶためのリポジトリ。
 ```
 /
 ├── index.html        # テストサイト（gtag.js 直書き。仮ユーザーIDの切り替え付き）
-├── gtm.html          # GTM 練習用ページ（gtag.js なし。GTM コンテナIDを画面で設定）
+├── gtm.html          # GTM 練習用ページ（gtag.js なし。GTM コンテナ GTM-KXV4CBBD を読み込む）
 ├── dashboard.html    # BigQuery のデータを表示するダッシュボード（翌日以降）
 ├── realtime.html     # GA4 Data API で過去30分をユーザー単位で表示
 └── docs/             # 学習ガイド（00〜07章）
@@ -50,11 +50,7 @@ GA4・GTM・BigQuery を包括的に学ぶためのリポジトリ。
 
 ### gtm.html の使い方
 
-GTM のコンテナIDは次のどれかで指定する（上から優先）。
-
-1. URL に `?gtm=GTM-XXXXXXX` を付ける
-2. 画面の「GTM コンテナ」欄に入れて保存する（ブラウザの localStorage に保存）
-3. `gtm.html` 内の `DEFAULT_GTM_ID` に書く
+GTM コンテナ `GTM-KXV4CBBD` を読み込む。別のコンテナで試すときは、`gtm.html` の `window.GTM_ID` と、`<body>` 直後の noscript の `id=` の2か所を書き換える。
 
 右側に dataLayer の中身がリアルタイムで表示されるので、ボタンを押したときに何が積まれるかを見ながら GTM を設定できる。
 

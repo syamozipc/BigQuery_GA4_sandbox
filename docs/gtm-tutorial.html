@@ -77,8 +77,8 @@
 <label class="check"><input type="checkbox" id="setup-container"> コンテナを作り、コンテナIDを控えた</label></li>
 
 <li><h4>gtm.html にコンテナIDを設定する</h4>
-<p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">gtm.html</a> を開き、「GTM コンテナ」欄にIDを入れて「保存して再読み込み」を押します。表示が「GTM-XXXXXXX 読み込み済み」になり、右の dataLayer に <code>gtm.js</code>・<code>gtm.dom</code>・<code>gtm.load</code> が並べば成功です。</p>
-<p>ローカルで試すときは、リポジトリ直下で <code>python3 -m http.server 8000</code> を実行し、<code>http://localhost:8000/gtm.html</code> を開きます。</p>
+<p>gtm.html の <code>window.GTM_ID</code> と、<code>&lt;body&gt;</code> 直後の noscript にある <code>id=</code> の2か所を、自分のコンテナIDに書き換えます。このリポジトリでは <code>GTM-KXV4CBBD</code> を設定済みです。</p>
+<p>gtm.html を開き、「GTM-KXV4CBBD 読み込み済み」と表示され、右の dataLayer に <code>gtm.js</code>・<code>gtm.dom</code>・<code>gtm.load</code> が並べば成功です。ローカルで試すときは、リポジトリ直下で <code>python3 -m http.server 8000</code> を実行し、<code>http://localhost:8000/gtm.html</code> を開きます。</p>
 <label class="check"><input type="checkbox" id="setup-load"> gtm.html で「読み込み済み」になった</label></li>
 
 <li><h4>Google タグを作る</h4>

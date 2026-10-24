@@ -5,45 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GTM 練習ページ</title>
 
-    <!--
-      このページには gtag.js を入れていない。計測はすべて GTM（Google タグマネージャー）経由。
-      GTM コンテナIDは次のどれかで指定する（上から優先）:
-        1. URL の ?gtm=GTM-XXXXXXX
-        2. 画面上の入力欄（このブラウザの localStorage に保存）
-        3. 下の DEFAULT_GTM_ID
-    -->
+    <!-- Google Tag Manager。ID を変えるときは GTM_ID と下の noscript の id の2か所を書き換える -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      (function () {
-        var DEFAULT_GTM_ID = ""; // 固定したい場合はここに "GTM-XXXXXXX" を書く
-        var KEY = "gtm_sandbox_container_id";
-        var fromQuery = new URLSearchParams(location.search).get("gtm");
-        var stored = null;
-        try {
-          stored = localStorage.getItem(KEY);
-        } catch (e) {}
-        var id = (fromQuery || stored || DEFAULT_GTM_ID || "").trim().toUpperCase();
-        if (fromQuery) {
-          try {
-            localStorage.setItem(KEY, id);
-          } catch (e) {}
-        }
-        window.GTM_ID = /^GTM-[A-Z0-9]+$/.test(id) ? id : null;
-        if (!window.GTM_ID) return;
-
-        // ↓ GTM 公式のコンテナスニペット（ID だけ変数にしている）
-        (function (w, d, s, l, i) {
-          w[l] = w[l] || [];
-          w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
-          var f = d.getElementsByTagName(s)[0],
-            j = d.createElement(s),
-            dl = l != "dataLayer" ? "&l=" + l : "";
-          j.async = true;
-          j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
-          f.parentNode.insertBefore(j, f);
-        })(window, document, "script", "dataLayer", window.GTM_ID);
-      })();
+      window.GTM_ID = "GTM-KXV4CBBD";
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", window.GTM_ID);
     </script>
+    <!-- End Google Tag Manager -->
 
     <style>
       * {
@@ -52,7 +28,9 @@
         padding: 0;
       }
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans",
+          sans-serif;
         background: #f4f6f9;
         color: #263238;
         line-height: 1.7;
@@ -245,10 +223,6 @@
         border-radius: 8px;
         min-width: 0;
       }
-      #gtm-id-input {
-        width: 200px;
-        font-family: "SFMono-Regular", Menlo, monospace;
-      }
       .switch {
         display: inline-flex;
         gap: 8px;
@@ -398,7 +372,16 @@
     </style>
   </head>
   <body>
-    <!-- GTM の noscript 部分（JS 無効時用）。ID は固定できないので省略している -->
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-KXV4CBBD"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <header>
       <div>
         <h1>GTM 練習ページ</h1>
@@ -416,16 +399,14 @@
         <section class="card" aria-labelledby="h-container">
           <h2 id="h-container">GTM コンテナ</h2>
           <p>
-            自分の GTM コンテナIDを入れて保存すると、このブラウザではそのコンテナが読み込まれます。
+            このページは GTM コンテナ <code>GTM-KXV4CBBD</code> を読み込みます。別のコンテナで試すときは、gtm.html の
+            <code>GTM_ID</code> と noscript の id を書き換えます。
           </p>
           <div class="row">
-            <span id="gtm-status" class="status">未設定</span>
-            <input id="gtm-id-input" type="text" placeholder="GTM-XXXXXXX" autocomplete="off" />
-            <button class="primary" type="button" onclick="saveContainer()">保存して再読み込み</button>
-            <button type="button" onclick="clearContainer()">解除</button>
+            <span id="gtm-status" class="status wait">読み込み中…</span>
           </div>
           <p class="note" id="gtm-note">
-            コンテナが未設定でも、ボタンを押すと右の dataLayer に何が積まれるかは確認できます。
+            広告ブロッカーなどで GTM が止められていても、ボタンを押すと右の dataLayer に何が積まれるかは確認できます。
           </p>
         </section>
 
@@ -433,15 +414,24 @@
         <section class="card" aria-labelledby="h-a">
           <h2 id="h-a"><span class="tag tag-a">方式A</span>dataLayer.push</h2>
           <p>
-            ボタンのクリック処理で、意味のある名前のイベントを dataLayer に積みます。GTM 側は「カスタムイベント」トリガーで受け取ります。
+            ボタンのクリック処理で、意味のある名前のイベントを dataLayer
+            に積みます。GTM 側は「カスタムイベント」トリガーで受け取ります。
           </p>
           <div class="row">
-            <button type="button" onclick="pushCta('資料請求', 'hero')">資料請求</button>
-            <button type="button" onclick="pushCta('無料で始める', 'footer')">無料で始める</button>
-            <button type="button" id="signup-btn" onclick="signUp()">会員登録する（API成功後に送信）</button>
-            <button type="button" onclick="addToCart()">プロプランをカートに追加</button>
+            <button type="button" onclick="pushCta('資料請求', 'hero')">
+              資料請求
+            </button>
+            <button type="button" onclick="pushCta('無料で始める', 'footer')">
+              無料で始める
+            </button>
+            <button type="button" id="signup-btn" onclick="signUp()">
+              会員登録する（API成功後に送信）
+            </button>
+            <button type="button" onclick="addToCart()">
+              プロプランをカートに追加
+            </button>
           </div>
-<pre><code>// 資料請求 / 無料で始める
+          <pre><code>// 資料請求 / 無料で始める
 dataLayer.push({ event: "cta_click", cta_name: "資料請求", cta_position: "hero" });
 
 // 会員登録: API が成功した「後」に送る（押しただけでは送らない）
@@ -459,16 +449,28 @@ dataLayer.push({
 
         <!-- B: クラス名・data 属性 -->
         <section class="card" aria-labelledby="h-b">
-          <h2 id="h-b"><span class="tag tag-b">方式B</span>クラス名・data属性で拾う</h2>
+          <h2 id="h-b">
+            <span class="tag tag-b">方式B</span>クラス名・data属性で拾う
+          </h2>
           <p>
-            下のボタンとリンクには <code>onclick</code> も <code>addEventListener</code> もありません。GTM の「クリック」トリガーが
-            <code>.js-track-click</code> クラスや <code>data-track-name</code> 属性を見て拾います。
+            下のボタンとリンクには <code>onclick</code> も
+            <code>addEventListener</code> もありません。GTM
+            の「クリック」トリガーが <code>.js-track-click</code> クラスや
+            <code>data-track-name</code> 属性を見て拾います。
           </p>
           <div class="row" id="b-targets">
-            <button type="button" class="js-track-click" data-track-name="pricing_basic">
+            <button
+              type="button"
+              class="js-track-click"
+              data-track-name="pricing_basic"
+            >
               <span class="icon">▶</span> ベーシックプランを見る
             </button>
-            <button type="button" class="js-track-click" data-track-name="pricing_pro">
+            <button
+              type="button"
+              class="js-track-click"
+              data-track-name="pricing_pro"
+            >
               <span class="icon">▶</span> プロプランを見る
             </button>
             <a
@@ -480,30 +482,45 @@ dataLayer.push({
               >GTM ヘルプ（外部リンク）</a
             >
           </div>
-<pre><code>&lt;button class="js-track-click" data-track-name="pricing_pro"&gt;
+          <pre><code>&lt;button class="js-track-click" data-track-name="pricing_pro"&gt;
   &lt;span class="icon"&gt;▶&lt;/span&gt; プロプランを見る
 &lt;/button&gt;</code></pre>
           <div class="row" style="margin-top: 14px">
             <label class="switch">
-              <input type="checkbox" id="rename-toggle" onchange="renameClasses(this.checked)" />
+              <input
+                type="checkbox"
+                id="rename-toggle"
+                onchange="renameClasses(this.checked)"
+              />
               デザイン改修をシミュレート（クラス名を変更）
             </label>
-            <span class="class-state" id="class-state">class="js-track-click"</span>
+            <span class="class-state" id="class-state"
+              >class="js-track-click"</span
+            >
           </div>
           <p class="note">
-            オンにすると <code>js-track-click</code> が <code>btn-cta-v2</code> に変わります（data属性は残ります）。
+            オンにすると <code>js-track-click</code> が
+            <code>btn-cta-v2</code> に変わります（data属性は残ります）。
             クラス名で判定するトリガーは止まり、data属性で判定するトリガーは動き続けることを確かめてください。
           </p>
         </section>
 
         <!-- C: その他のトリガー -->
         <section class="card" aria-labelledby="h-c">
-          <h2 id="h-c"><span class="tag tag-c">発展</span>フォーム送信と要素の表示</h2>
+          <h2 id="h-c">
+            <span class="tag tag-c">発展</span>フォーム送信と要素の表示
+          </h2>
           <p>
             「フォームの送信」トリガーと「要素の表示」トリガーの練習用です。どちらもページ側に計測コードはありません。
           </p>
           <form id="gtm-form" onsubmit="fakeSubmit(event)">
-            <label>お名前<input type="text" id="f-name" name="name" placeholder="山田 花子" /></label>
+            <label
+              >お名前<input
+                type="text"
+                id="f-name"
+                name="name"
+                placeholder="山田 花子"
+            /></label>
             <label
               >興味のあるプラン
               <select id="f-plan" name="plan">
@@ -515,9 +532,12 @@ dataLayer.push({
             <button class="primary" type="submit">問い合わせを送信</button>
           </form>
           <p class="note" id="form-result">
-            送信はページ内で止めています（<code>preventDefault</code>）。GTM のフォームトリガーは「妥当性をチェック」をオフにしてください。
+            送信はページ内で止めています（<code>preventDefault</code>）。GTM
+            のフォームトリガーは「妥当性をチェック」をオフにしてください。
           </p>
-          <div class="spacer">↓ スクロールすると下にバナーが現れます（要素の表示トリガー用）</div>
+          <div class="spacer">
+            ↓ スクロールすると下にバナーが現れます（要素の表示トリガー用）
+          </div>
           <div id="promo-banner" data-promo-name="autumn_campaign">
             秋の乗り換えキャンペーン
             <small>id="promo-banner" / data-promo-name="autumn_campaign"</small>
@@ -529,22 +549,31 @@ dataLayer.push({
       <aside class="viewer" aria-labelledby="h-viewer">
         <h2 id="h-viewer">dataLayer の中身（新しい順）</h2>
         <div class="tools">
-          <label><input type="checkbox" id="hide-gtm" onchange="rerender()" /> gtm.* を隠す</label>
+          <label
+            ><input type="checkbox" id="hide-gtm" onchange="rerender()" /> gtm.*
+            を隠す</label
+          >
           <button type="button" onclick="clearView()">表示をクリア</button>
           <span id="dl-count"></span>
         </div>
-        <div id="dl-list"><p class="empty">ここに dataLayer に積まれたメッセージが表示されます。</p></div>
+        <div id="dl-list">
+          <p class="empty">
+            ここに dataLayer に積まれたメッセージが表示されます。
+          </p>
+        </div>
       </aside>
     </div>
 
     <footer>GTM 練習ページ ｜ BigQuery_GA4_sandbox</footer>
 
     <script>
-      var STORE_KEY = "gtm_sandbox_container_id";
-
       // ---- 方式A: dataLayer.push ----
       function pushCta(name, position) {
-        dataLayer.push({ event: "cta_click", cta_name: name, cta_position: position });
+        dataLayer.push({
+          event: "cta_click",
+          cta_name: name,
+          cta_position: position,
+        });
       }
 
       function signUp() {
@@ -566,7 +595,14 @@ dataLayer.push({
           ecommerce: {
             currency: "JPY",
             value: 8000,
-            items: [{ item_id: "plan_pro", item_name: "プロプラン", price: 8000, quantity: 1 }],
+            items: [
+              {
+                item_id: "plan_pro",
+                item_name: "プロプラン",
+                price: 8000,
+                quantity: 1,
+              },
+            ],
           },
         });
       }
@@ -578,7 +614,8 @@ dataLayer.push({
         document.querySelectorAll("#b-targets ." + from).forEach(function (el) {
           el.classList.replace(from, to);
         });
-        document.getElementById("class-state").textContent = 'class="' + to + '"';
+        document.getElementById("class-state").textContent =
+          'class="' + to + '"';
       }
 
       // ---- 発展: フォーム ----
@@ -588,40 +625,21 @@ dataLayer.push({
           "送信しました（擬似）。GTM にフォーム送信トリガーがあれば gtm.formSubmit が右に出ます。";
       }
 
-      // ---- コンテナ設定 ----
-      function saveContainer() {
-        var v = document.getElementById("gtm-id-input").value.trim().toUpperCase();
-        if (!/^GTM-[A-Z0-9]+$/.test(v)) {
-          document.getElementById("gtm-note").textContent =
-            "GTM-XXXXXXX の形で入力してください（GTM の画面右上に表示されているIDです）。";
-          return;
-        }
-        try {
-          localStorage.setItem(STORE_KEY, v);
-        } catch (e) {}
-        location.href = location.pathname + "?gtm=" + encodeURIComponent(v);
-      }
-
-      function clearContainer() {
-        try {
-          localStorage.removeItem(STORE_KEY);
-        } catch (e) {}
-        location.href = location.pathname;
-      }
-
+      // ---- コンテナの読み込み状況 ----
       function renderStatus() {
         var el = document.getElementById("gtm-status");
-        var input = document.getElementById("gtm-id-input");
-        if (!window.GTM_ID) {
-          el.className = "status";
-          el.textContent = "未設定";
-          return;
-        }
-        input.value = window.GTM_ID;
-        var loaded = window.google_tag_manager && window.google_tag_manager[window.GTM_ID];
+        var loaded =
+          window.google_tag_manager && window.google_tag_manager[window.GTM_ID];
         el.className = loaded ? "status ok" : "status wait";
-        el.textContent = loaded ? window.GTM_ID + " 読み込み済み" : window.GTM_ID + " 読み込み中…";
-        if (!loaded) setTimeout(renderStatus, 500);
+        el.textContent = loaded
+          ? window.GTM_ID + " 読み込み済み"
+          : window.GTM_ID + " 読み込み中…";
+        if (!loaded && (renderStatus.tries = (renderStatus.tries || 0) + 1) < 20) {
+          setTimeout(renderStatus, 500);
+        } else if (!loaded) {
+          el.className = "status";
+          el.textContent = window.GTM_ID + " を読み込めませんでした（広告ブロッカーなど）";
+        }
       }
 
       // ---- dataLayer ビューア ----
@@ -632,7 +650,8 @@ dataLayer.push({
       function describeEl(el) {
         var s = el.tagName.toLowerCase();
         if (el.id) s += "#" + el.id;
-        if (el.classList && el.classList.length) s += "." + Array.from(el.classList).join(".");
+        if (el.classList && el.classList.length)
+          s += "." + Array.from(el.classList).join(".");
         var name = el.getAttribute && el.getAttribute("data-track-name");
         if (name) s += '[data-track-name="' + name + '"]';
         return "<" + s + ">";
@@ -643,9 +662,11 @@ dataLayer.push({
         return JSON.stringify(
           obj,
           function (k, v) {
-            if (typeof Element !== "undefined" && v instanceof Element) return describeEl(v);
+            if (typeof Element !== "undefined" && v instanceof Element)
+              return describeEl(v);
             if (typeof v === "function") return "ƒ()";
-            if (Object.prototype.toString.call(v) === "[object Arguments]") return Array.from(v);
+            if (Object.prototype.toString.call(v) === "[object Arguments]")
+              return Array.from(v);
             if (v && typeof v === "object") {
               if (seen.has(v)) return "[循環参照]";
               seen.add(v);
@@ -660,7 +681,10 @@ dataLayer.push({
         while (entries.length < dataLayer.length) {
           var i = entries.length;
           var msg = dataLayer[i];
-          var ev = msg && typeof msg === "object" && "event" in msg ? String(msg.event) : "(event なし)";
+          var ev =
+            msg && typeof msg === "object" && "event" in msg
+              ? String(msg.event)
+              : "(event なし)";
           var text;
           try {
             text = safeJson(msg);
@@ -680,9 +704,11 @@ dataLayer.push({
           return e.i >= shownFrom && !(hide && e.ev.indexOf("gtm.") === 0);
         });
         renderedCount = entries.length;
-        document.getElementById("dl-count").textContent = "合計 " + dataLayer.length + " 件";
+        document.getElementById("dl-count").textContent =
+          "合計 " + dataLayer.length + " 件";
         if (!items.length) {
-          list.innerHTML = '<p class="empty">ここに dataLayer に積まれたメッセージが表示されます。</p>';
+          list.innerHTML =
+            '<p class="empty">ここに dataLayer に積まれたメッセージが表示されます。</p>';
           return;
         }
         list.innerHTML = "";
@@ -695,7 +721,8 @@ dataLayer.push({
             div.className = "dl-item" + (custom ? " custom" : "");
             var head = document.createElement("div");
             head.className = "head";
-            head.innerHTML = '<span class="idx">#' + e.i + '</span><span class="ev"></span>';
+            head.innerHTML =
+              '<span class="idx">#' + e.i + '</span><span class="ev"></span>';
             head.querySelector(".ev").textContent = e.ev;
             var pre = document.createElement("pre");
             pre.textContent = e.text;
