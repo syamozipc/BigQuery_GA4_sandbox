@@ -51,16 +51,21 @@
 <h2 id="inventory">作るものの一覧</h2>
 <p>この章で GTM に作るものをまとめておきます。名前は一例ですが、種類の略号を先頭に付けると一覧で探しやすくなります。</p>
 <div class="table-wrap"><table>
-<thead><tr><th>種類</th><th>名前</th><th>中身</th></tr></thead>
+<thead><tr><th>手順</th><th>種類</th><th>名前</th><th>中身</th></tr></thead>
 <tbody>
-<tr><td>タグ</td><td>GA4 - Google タグ</td><td>Google タグ。タグID <code>G-FEHSK6QJLE</code></td></tr>
-<tr><td>変数</td><td>dlv - cta_name / dlv - cta_position / dlv - method</td><td>データレイヤーの変数</td></tr>
-<tr><td>トリガー</td><td>CE - cta_click / CE - sign_up / CE - add_to_cart</td><td>カスタム イベント</td></tr>
-<tr><td>タグ</td><td>GA4 - cta_click / GA4 - sign_up / GA4 - add_to_cart</td><td>GA4 イベント（方式A）</td></tr>
-<tr><td>変数</td><td>cjs - track name</td><td>カスタム JavaScript。押された要素から <code>data-track-name</code> を探す</td></tr>
-<tr><td>トリガー</td><td>Click - class / Click - data-attr</td><td>クリック - すべての要素（方式B / B'）</td></tr>
-<tr><td>タグ</td><td>GA4 - ui_click</td><td>GA4 イベント（方式B）</td></tr>
-<tr><td>トリガー・タグ</td><td>Form - gtm-form / Vis - promo-banner</td><td>発展編</td></tr>
+<tr><td><strong>準備</strong></td><td>タグ</td><td>GA4 - Google タグ</td><td>Google タグ（<code>G-FEHSK6QJLE</code>）</td></tr>
+<tr><td><strong>方式A</strong></td><td>変数</td><td>dlv - cta_name</td><td>データレイヤーの変数</td></tr>
+<tr><td></td><td>変数</td><td>dlv - cta_position</td><td>データレイヤーの変数</td></tr>
+<tr><td></td><td>トリガー</td><td>CE - cta_click</td><td>カスタム イベント</td></tr>
+<tr><td></td><td>タグ</td><td>GA4 - cta_click</td><td>GA4 イベント</td></tr>
+<tr><td></td><td>変数・トリガー・タグ</td><td>sign_up 一式</td><td>練習として自分で作る</td></tr>
+<tr><td></td><td>トリガー・タグ</td><td>add_to_cart 一式</td><td>e コマースデータを送信</td></tr>
+<tr><td><strong>方式B</strong></td><td>変数</td><td>cjs - track name</td><td>カスタム JavaScript</td></tr>
+<tr><td></td><td>トリガー</td><td>Click - class</td><td>クリック（クラス名で判定）</td></tr>
+<tr><td></td><td>タグ</td><td>GA4 - ui_click</td><td>GA4 イベント</td></tr>
+<tr><td></td><td>トリガー</td><td>Click - data-attr</td><td>クリック（data属性で判定）</td></tr>
+<tr><td><strong>発展</strong></td><td>トリガー・タグ</td><td>Form - gtm-form</td><td>フォームの送信 → <code>generate_lead</code></td></tr>
+<tr><td></td><td>変数・トリガー・タグ</td><td>Vis - promo-banner</td><td>要素の表示 → <code>view_promotion</code></td></tr>
 </tbody></table></div>
 
 <h2 id="setup">準備: コンテナと Google タグ</h2>
