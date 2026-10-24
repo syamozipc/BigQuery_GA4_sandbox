@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GTM 練習ページ</title>
+
+    <!--
+      このページには gtag.js を入れていない。計測はすべて GTM（Google タグマネージャー）経由。
+      GTM コンテナIDは次のどれかで指定する（上から優先）:
+        1. URL の ?gtm=GTM-XXXXXXX
+        2. 画面上の入力欄（このブラウザの localStorage に保存）
+        3. 下の DEFAULT_GTM_ID
+    -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      (function () {
+        var DEFAULT_GTM_ID = ""; // 固定したい場合はここに "GTM-XXXXXXX" を書く
+        var KEY = "gtm_sandbox_container_id";
+        var fromQuery = new URLSearchParams(location.search).get("gtm");
+        var stored = null;
+        try {
+          stored = localStorage.getItem(KEY);
+        } catch (e) {}
+        var id = (fromQuery || stored || DEFAULT_GTM_ID || "").trim().toUpperCase();
+        if (fromQuery) {
+          try {
+            localStorage.setItem(KEY, id);
+          } catch (e) {}
+        }
+        window.GTM_ID = /^GTM-[A-Z0-9]+$/.test(id) ? id : null;
+        if (!window.GTM_ID) return;
+
+        // ↓ GTM 公式のコンテナスニペット（ID だけ変数にしている）
+        (function (w, d, s, l, i) {
+          w[l] = w[l] || [];
+          w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+          var f = d.getElementsByTagName(s)[0],
+            j = d.createElement(s),
+            dl = l != "dataLayer" ? "&l=" + l : "";
+          j.async = true;
+          j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+          f.parentNode.insertBefore(j, f);
+        })(window, document, "script", "dataLayer", window.GTM_ID);
+      })();
+    </script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif;
+        background: #f4f6f9;
+        color: #263238;
+        line-height: 1.7;
+      }
+      header {
+        background: #2f5bb0;
+        color: #fff;
+        padding: 22px max(16px, 4vw);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 24px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      header h1 {
+        font-size: 22px;
+      }
+      header p {
+        font-size: 13px;
+        opacity: 0.9;
+      }
+      header nav {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      header nav a {
+        background: #fff;
+        color: #2f5bb0;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 8px 14px;
+        border-radius: 8px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+        gap: 24px;
+        max-width: 1240px;
+        margin: 28px auto;
+        padding: 0 max(16px, 3vw);
+        align-items: start;
+      }
+      @media (max-width: 960px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-width: 0;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #dfe4ea;
+        border-radius: 12px;
+        padding: 22px 24px;
+        min-width: 0;
+      }
+      .card h2 {
+        font-size: 17px;
+        margin-bottom: 6px;
+      }
+      .card > p {
+        font-size: 14px;
+        color: #546e7a;
+        margin-bottom: 12px;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        padding: 1px 8px;
+        border-radius: 999px;
+        margin-right: 6px;
+        vertical-align: 2px;
+      }
+      .tag-a {
+        background: #e3ecfb;
+        color: #2f5bb0;
+      }
+      .tag-b {
+        background: #fdebd9;
+        color: #a2520b;
+      }
+      .tag-c {
+        background: #e4f3ec;
+        color: #1d6b4c;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      button,
+      .btn {
+        font: inherit;
+        font-size: 14px;
+        padding: 9px 16px;
+        border-radius: 8px;
+        border: 1px solid #c7d0da;
+        background: #fff;
+        color: #263238;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      button:hover,
+      .btn:hover {
+        border-color: #2f5bb0;
+      }
+      button:focus-visible,
+      .btn:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
+        outline: 2px solid #2f5bb0;
+        outline-offset: 2px;
+      }
+      .primary {
+        background: #2f5bb0;
+        border-color: #2f5bb0;
+        color: #fff;
+      }
+      .icon {
+        font-size: 11px;
+        background: #eef2f7;
+        border-radius: 4px;
+        padding: 0 5px;
+        color: #546e7a;
+      }
+      pre {
+        background: #1f2630;
+        color: #d8e1ea;
+        font-family: "SFMono-Regular", Menlo, monospace;
+        font-size: 12.5px;
+        border-radius: 8px;
+        padding: 12px 14px;
+        overflow-x: auto;
+        margin-top: 12px;
+        line-height: 1.6;
+      }
+      code {
+        font-family: "SFMono-Regular", Menlo, monospace;
+        font-size: 0.9em;
+        background: #eef2f7;
+        padding: 0 5px;
+        border-radius: 4px;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+      }
+      .note {
+        font-size: 13px;
+        color: #607d8b;
+        margin-top: 10px;
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 3px 12px;
+        border-radius: 999px;
+        background: #fdecea;
+        color: #b3261e;
+      }
+      .status.ok {
+        background: #e4f3ec;
+        color: #1d6b4c;
+      }
+      .status.wait {
+        background: #fff4d6;
+        color: #8a5a00;
+      }
+      input[type="text"],
+      select {
+        font: inherit;
+        font-size: 14px;
+        padding: 8px 12px;
+        border: 1px solid #c7d0da;
+        border-radius: 8px;
+        min-width: 0;
+      }
+      #gtm-id-input {
+        width: 200px;
+        font-family: "SFMono-Regular", Menlo, monospace;
+      }
+      .switch {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 14px;
+        cursor: pointer;
+        background: #fff8ef;
+        border: 1px dashed #e0a96d;
+        border-radius: 8px;
+        padding: 8px 12px;
+      }
+      .class-state {
+        font-size: 12.5px;
+        font-family: "SFMono-Regular", Menlo, monospace;
+        color: #a2520b;
+      }
+      form {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        align-items: end;
+      }
+      form label {
+        display: grid;
+        gap: 4px;
+        font-size: 13px;
+        color: #546e7a;
+      }
+      .spacer {
+        height: 520px;
+        border-left: 2px dashed #dfe4ea;
+        margin: 14px 0 14px 12px;
+        padding-left: 14px;
+        font-size: 13px;
+        color: #90a4ae;
+        display: flex;
+        align-items: center;
+      }
+      #promo-banner {
+        background: #1d6b4c;
+        color: #fff;
+        border-radius: 10px;
+        padding: 18px 20px;
+        font-weight: 700;
+      }
+      #promo-banner small {
+        display: block;
+        font-weight: 400;
+        opacity: 0.85;
+      }
+
+      /* dataLayer ビューア */
+      .viewer {
+        position: sticky;
+        top: 16px;
+        background: #1f2630;
+        color: #d8e1ea;
+        border-radius: 12px;
+        padding: 16px;
+        max-height: calc(100vh - 32px);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+      }
+      @media (max-width: 960px) {
+        .viewer {
+          position: static;
+          max-height: 520px;
+        }
+      }
+      .viewer h2 {
+        font-size: 15px;
+        color: #fff;
+      }
+      .viewer .tools {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        font-size: 12.5px;
+      }
+      .viewer .tools button {
+        background: transparent;
+        color: #d8e1ea;
+        border-color: #4a5868;
+        padding: 4px 10px;
+        font-size: 12px;
+      }
+      .viewer .tools label {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        cursor: pointer;
+      }
+      #dl-list {
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 120px;
+      }
+      .dl-item {
+        border: 1px solid #3a4655;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-family: "SFMono-Regular", Menlo, monospace;
+        font-size: 12px;
+      }
+      .dl-item .head {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        margin-bottom: 4px;
+      }
+      .dl-item .idx {
+        color: #7f8fa3;
+      }
+      .dl-item .ev {
+        color: #ffb86b;
+        font-weight: 700;
+      }
+      .dl-item.custom {
+        border-color: #6c9cf0;
+      }
+      .dl-item.custom .ev {
+        color: #9cc1ff;
+      }
+      .dl-item pre {
+        margin: 0;
+        padding: 0;
+        background: none;
+        color: #c3d0dd;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .empty {
+        font-size: 13px;
+        color: #7f8fa3;
+      }
+      footer {
+        text-align: center;
+        font-size: 12px;
+        color: #90a4ae;
+        padding: 24px 16px 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- GTM の noscript 部分（JS 無効時用）。ID は固定できないので省略している -->
+    <header>
+      <div>
+        <h1>GTM 練習ページ</h1>
+        <p>gtag.js は入っていません。計測はすべて GTM の設定で行います。</p>
+      </div>
+      <nav>
+        <a href="./">テストサイト（gtag.js）</a>
+        <a href="./docs/gtm-tutorial.html">手順（04章）</a>
+      </nav>
+    </header>
+
+    <div class="layout">
+      <div class="stack">
+        <!-- コンテナ設定 -->
+        <section class="card" aria-labelledby="h-container">
+          <h2 id="h-container">GTM コンテナ</h2>
+          <p>
+            自分の GTM コンテナIDを入れて保存すると、このブラウザではそのコンテナが読み込まれます。
+          </p>
+          <div class="row">
+            <span id="gtm-status" class="status">未設定</span>
+            <input id="gtm-id-input" type="text" placeholder="GTM-XXXXXXX" autocomplete="off" />
+            <button class="primary" type="button" onclick="saveContainer()">保存して再読み込み</button>
+            <button type="button" onclick="clearContainer()">解除</button>
+          </div>
+          <p class="note" id="gtm-note">
+            コンテナが未設定でも、ボタンを押すと右の dataLayer に何が積まれるかは確認できます。
+          </p>
+        </section>
+
+        <!-- A: dataLayer.push -->
+        <section class="card" aria-labelledby="h-a">
+          <h2 id="h-a"><span class="tag tag-a">方式A</span>dataLayer.push</h2>
+          <p>
+            ボタンのクリック処理で、意味のある名前のイベントを dataLayer に積みます。GTM 側は「カスタムイベント」トリガーで受け取ります。
+          </p>
+          <div class="row">
+            <button type="button" onclick="pushCta('資料請求', 'hero')">資料請求</button>
+            <button type="button" onclick="pushCta('無料で始める', 'footer')">無料で始める</button>
+            <button type="button" id="signup-btn" onclick="signUp()">会員登録する（API成功後に送信）</button>
+            <button type="button" onclick="addToCart()">プロプランをカートに追加</button>
+          </div>
+<pre><code>// 資料請求 / 無料で始める
+dataLayer.push({ event: "cta_click", cta_name: "資料請求", cta_position: "hero" });
+
+// 会員登録: API が成功した「後」に送る（押しただけでは送らない）
+await api.signUp();
+dataLayer.push({ event: "sign_up", method: "email" });
+
+// カート追加: 推奨イベントの形。前の ecommerce をリセットしてから push
+dataLayer.push({ ecommerce: null });
+dataLayer.push({
+  event: "add_to_cart",
+  ecommerce: { currency: "JPY", value: 8000,
+    items: [{ item_id: "plan_pro", item_name: "プロプラン", price: 8000, quantity: 1 }] },
+});</code></pre>
+        </section>
+
+        <!-- B: クラス名・data 属性 -->
+        <section class="card" aria-labelledby="h-b">
+          <h2 id="h-b"><span class="tag tag-b">方式B</span>クラス名・data属性で拾う</h2>
+          <p>
+            下のボタンとリンクには <code>onclick</code> も <code>addEventListener</code> もありません。GTM の「クリック」トリガーが
+            <code>.js-track-click</code> クラスや <code>data-track-name</code> 属性を見て拾います。
+          </p>
+          <div class="row" id="b-targets">
+            <button type="button" class="js-track-click" data-track-name="pricing_basic">
+              <span class="icon">▶</span> ベーシックプランを見る
+            </button>
+            <button type="button" class="js-track-click" data-track-name="pricing_pro">
+              <span class="icon">▶</span> プロプランを見る
+            </button>
+            <a
+              class="btn js-track-click"
+              data-track-name="help_link"
+              href="https://support.google.com/tagmanager"
+              target="_blank"
+              rel="noopener"
+              >GTM ヘルプ（外部リンク）</a
+            >
+          </div>
+<pre><code>&lt;button class="js-track-click" data-track-name="pricing_pro"&gt;
+  &lt;span class="icon"&gt;▶&lt;/span&gt; プロプランを見る
+&lt;/button&gt;</code></pre>
+          <div class="row" style="margin-top: 14px">
+            <label class="switch">
+              <input type="checkbox" id="rename-toggle" onchange="renameClasses(this.checked)" />
+              デザイン改修をシミュレート（クラス名を変更）
+            </label>
+            <span class="class-state" id="class-state">class="js-track-click"</span>
+          </div>
+          <p class="note">
+            オンにすると <code>js-track-click</code> が <code>btn-cta-v2</code> に変わります（data属性は残ります）。
+            クラス名で判定するトリガーは止まり、data属性で判定するトリガーは動き続けることを確かめてください。
+          </p>
+        </section>
+
+        <!-- C: その他のトリガー -->
+        <section class="card" aria-labelledby="h-c">
+          <h2 id="h-c"><span class="tag tag-c">発展</span>フォーム送信と要素の表示</h2>
+          <p>
+            「フォームの送信」トリガーと「要素の表示」トリガーの練習用です。どちらもページ側に計測コードはありません。
+          </p>
+          <form id="gtm-form" onsubmit="fakeSubmit(event)">
+            <label>お名前<input type="text" id="f-name" name="name" placeholder="山田 花子" /></label>
+            <label
+              >興味のあるプラン
+              <select id="f-plan" name="plan">
+                <option value="basic">ベーシック</option>
+                <option value="pro" selected>プロ</option>
+                <option value="enterprise">エンタープライズ</option>
+              </select>
+            </label>
+            <button class="primary" type="submit">問い合わせを送信</button>
+          </form>
+          <p class="note" id="form-result">
+            送信はページ内で止めています（<code>preventDefault</code>）。GTM のフォームトリガーは「妥当性をチェック」をオフにしてください。
+          </p>
+          <div class="spacer">↓ スクロールすると下にバナーが現れます（要素の表示トリガー用）</div>
+          <div id="promo-banner" data-promo-name="autumn_campaign">
+            秋の乗り換えキャンペーン
+            <small>id="promo-banner" / data-promo-name="autumn_campaign"</small>
+          </div>
+        </section>
+      </div>
+
+      <!-- dataLayer ビューア -->
+      <aside class="viewer" aria-labelledby="h-viewer">
+        <h2 id="h-viewer">dataLayer の中身（新しい順）</h2>
+        <div class="tools">
+          <label><input type="checkbox" id="hide-gtm" onchange="rerender()" /> gtm.* を隠す</label>
+          <button type="button" onclick="clearView()">表示をクリア</button>
+          <span id="dl-count"></span>
+        </div>
+        <div id="dl-list"><p class="empty">ここに dataLayer に積まれたメッセージが表示されます。</p></div>
+      </aside>
+    </div>
+
+    <footer>GTM 練習ページ ｜ BigQuery_GA4_sandbox</footer>
+
+    <script>
+      var STORE_KEY = "gtm_sandbox_container_id";
+
+      // ---- 方式A: dataLayer.push ----
+      function pushCta(name, position) {
+        dataLayer.push({ event: "cta_click", cta_name: name, cta_position: position });
+      }
+
+      function signUp() {
+        var btn = document.getElementById("signup-btn");
+        btn.disabled = true;
+        btn.textContent = "登録中…";
+        // 本物の API の代わりに 0.8 秒待つ
+        setTimeout(function () {
+          dataLayer.push({ event: "sign_up", method: "email" });
+          btn.disabled = false;
+          btn.textContent = "会員登録する（API成功後に送信）";
+        }, 800);
+      }
+
+      function addToCart() {
+        dataLayer.push({ ecommerce: null });
+        dataLayer.push({
+          event: "add_to_cart",
+          ecommerce: {
+            currency: "JPY",
+            value: 8000,
+            items: [{ item_id: "plan_pro", item_name: "プロプラン", price: 8000, quantity: 1 }],
+          },
+        });
+      }
+
+      // ---- 方式B: クラス名の変更（デザイン改修のシミュレーション） ----
+      function renameClasses(on) {
+        var from = on ? "js-track-click" : "btn-cta-v2";
+        var to = on ? "btn-cta-v2" : "js-track-click";
+        document.querySelectorAll("#b-targets ." + from).forEach(function (el) {
+          el.classList.replace(from, to);
+        });
+        document.getElementById("class-state").textContent = 'class="' + to + '"';
+      }
+
+      // ---- 発展: フォーム ----
+      function fakeSubmit(e) {
+        e.preventDefault();
+        document.getElementById("form-result").textContent =
+          "送信しました（擬似）。GTM にフォーム送信トリガーがあれば gtm.formSubmit が右に出ます。";
+      }
+
+      // ---- コンテナ設定 ----
+      function saveContainer() {
+        var v = document.getElementById("gtm-id-input").value.trim().toUpperCase();
+        if (!/^GTM-[A-Z0-9]+$/.test(v)) {
+          document.getElementById("gtm-note").textContent =
+            "GTM-XXXXXXX の形で入力してください（GTM の画面右上に表示されているIDです）。";
+          return;
+        }
+        try {
+          localStorage.setItem(STORE_KEY, v);
+        } catch (e) {}
+        location.href = location.pathname + "?gtm=" + encodeURIComponent(v);
+      }
+
+      function clearContainer() {
+        try {
+          localStorage.removeItem(STORE_KEY);
+        } catch (e) {}
+        location.href = location.pathname;
+      }
+
+      function renderStatus() {
+        var el = document.getElementById("gtm-status");
+        var input = document.getElementById("gtm-id-input");
+        if (!window.GTM_ID) {
+          el.className = "status";
+          el.textContent = "未設定";
+          return;
+        }
+        input.value = window.GTM_ID;
+        var loaded = window.google_tag_manager && window.google_tag_manager[window.GTM_ID];
+        el.className = loaded ? "status ok" : "status wait";
+        el.textContent = loaded ? window.GTM_ID + " 読み込み済み" : window.GTM_ID + " 読み込み中…";
+        if (!loaded) setTimeout(renderStatus, 500);
+      }
+
+      // ---- dataLayer ビューア ----
+      // GTM は dataLayer.push を差し替えるので、push をフックせず配列の長さを監視する
+      var shownFrom = 0;
+      var entries = [];
+
+      function describeEl(el) {
+        var s = el.tagName.toLowerCase();
+        if (el.id) s += "#" + el.id;
+        if (el.classList && el.classList.length) s += "." + Array.from(el.classList).join(".");
+        var name = el.getAttribute && el.getAttribute("data-track-name");
+        if (name) s += '[data-track-name="' + name + '"]';
+        return "<" + s + ">";
+      }
+
+      function safeJson(obj) {
+        var seen = new WeakSet();
+        return JSON.stringify(
+          obj,
+          function (k, v) {
+            if (typeof Element !== "undefined" && v instanceof Element) return describeEl(v);
+            if (typeof v === "function") return "ƒ()";
+            if (Object.prototype.toString.call(v) === "[object Arguments]") return Array.from(v);
+            if (v && typeof v === "object") {
+              if (seen.has(v)) return "[循環参照]";
+              seen.add(v);
+            }
+            return v;
+          },
+          2,
+        );
+      }
+
+      function poll() {
+        while (entries.length < dataLayer.length) {
+          var i = entries.length;
+          var msg = dataLayer[i];
+          var ev = msg && typeof msg === "object" && "event" in msg ? String(msg.event) : "(event なし)";
+          var text;
+          try {
+            text = safeJson(msg);
+          } catch (e) {
+            text = String(msg);
+          }
+          entries.push({ i: i, ev: ev, text: text });
+        }
+        if (entries.length !== renderedCount) rerender();
+      }
+
+      var renderedCount = -1;
+      function rerender() {
+        var hide = document.getElementById("hide-gtm").checked;
+        var list = document.getElementById("dl-list");
+        var items = entries.filter(function (e) {
+          return e.i >= shownFrom && !(hide && e.ev.indexOf("gtm.") === 0);
+        });
+        renderedCount = entries.length;
+        document.getElementById("dl-count").textContent = "合計 " + dataLayer.length + " 件";
+        if (!items.length) {
+          list.innerHTML = '<p class="empty">ここに dataLayer に積まれたメッセージが表示されます。</p>';
+          return;
+        }
+        list.innerHTML = "";
+        items
+          .slice(-150)
+          .reverse()
+          .forEach(function (e) {
+            var div = document.createElement("div");
+            var custom = e.ev.indexOf("gtm.") !== 0 && e.ev !== "(event なし)";
+            div.className = "dl-item" + (custom ? " custom" : "");
+            var head = document.createElement("div");
+            head.className = "head";
+            head.innerHTML = '<span class="idx">#' + e.i + '</span><span class="ev"></span>';
+            head.querySelector(".ev").textContent = e.ev;
+            var pre = document.createElement("pre");
+            pre.textContent = e.text;
+            div.appendChild(head);
+            div.appendChild(pre);
+            list.appendChild(div);
+          });
+      }
+
+      function clearView() {
+        shownFrom = dataLayer.length;
+        rerender();
+      }
+
+      renderStatus();
+      poll();
+      setInterval(poll, 250);
+    </script>
+  </body>
+</html>

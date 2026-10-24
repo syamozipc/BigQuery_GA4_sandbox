@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>02 カスタムディメンションを画面で見る | GA4・GTM・BigQuery 学習ガイド</title>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" />
+<link rel="stylesheet" href="assets/guide.css" />
+</head>
+<body>
+<div class="shell" data-page-id="ga4-custom-dimensions">
+<aside class="side">
+<a class="brand" href="index.html">GA4・GTM・BigQuery<small>学習ガイド</small></a>
+<nav class="chapters" aria-label="章">
+<a data-page="index" href="index.html"><span class="no">00</span><span>全体像とロードマップ</span></a>
+<p class="group">GA4</p>
+<a data-page="ga4-basics" href="ga4-basics.html"><span class="no">01</span><span>GA4の基礎</span></a>
+<a data-page="ga4-custom-dimensions" href="ga4-custom-dimensions.html"><span class="no">02</span><span>カスタムディメンションを画面で見る</span></a>
+<p class="group">GTM</p>
+<a data-page="gtm-basics" href="gtm-basics.html"><span class="no">03</span><span>GTMの基礎</span></a>
+<a data-page="gtm-tutorial" href="gtm-tutorial.html"><span class="no">04</span><span>GTMを実際に使う</span></a>
+<p class="group">BigQuery</p>
+<a data-page="bigquery-basics" href="bigquery-basics.html"><span class="no">05</span><span>BigQueryの基礎</span></a>
+<a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
+<a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
+</nav>
+<div class="side-links"><p>練習用のページ</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム</a></div>
+</aside>
+<main>
+<div class="content">
+<div class="kicker"><span class="chip">02</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-ga4">GA4</span></div>
+<h1>カスタムディメンションを画面で見る</h1>
+<p class="lead">テストサイトが送っている <code>button_name</code> や <code>plan</code> を、GA4 のリアルタイム・探索・標準レポートで使えるようにします。所要時間は操作だけなら30分ほどです。探索と標準レポートでの確認は翌日以降になります。</p>
+
+<div class="toc"><p>この章の内容</p><ol>
+<li><a href="#why">なぜ登録が必要か</a></li>
+<li><a href="#inventory">送っているパラメータの棚卸し</a></li>
+<li><a href="#send">イベントを送って届いたか確かめる</a></li>
+<li><a href="#register">カスタムディメンションを登録する</a></li>
+<li><a href="#realtime">リアルタイムで絞り込む</a></li>
+<li><a href="#explore">探索で表を作る</a></li>
+<li><a href="#report">標準レポートで見る</a></li>
+<li><a href="#key">キーイベントを設定する</a></li>
+<li><a href="#trouble">出てこないときのチェックリスト</a></li>
+</ol></div>
+
+<h2 id="why">なぜ登録が必要か</h2>
+<figure class="diagram">
+<svg viewBox="0 0 830 230" role="img" aria-label="送ったパラメータはGA4に全部届くが、画面で使えるのはカスタム定義に登録したものだけ。BigQueryには登録なしで全部出る">
+<defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="head"/></marker></defs>
+<rect class="box" x="20" y="80" width="150" height="70" rx="8"/>
+<text class="t" x="95" y="108" text-anchor="middle">index.html</text>
+<text class="sm" x="95" y="130" text-anchor="middle">button_name</text>
+<rect class="box" x="230" y="80" width="150" height="70" rx="8"/>
+<text class="t" x="305" y="108" text-anchor="middle">GA4 に保存</text>
+<text class="s" x="305" y="130" text-anchor="middle">パラメータは全部届く</text>
+<rect class="box-warn" x="440" y="20" width="160" height="70" rx="8"/>
+<text class="t" x="520" y="48" text-anchor="middle">カスタム定義に登録</text>
+<text class="s" x="520" y="70" text-anchor="middle">名前とスコープを決める</text>
+<rect class="box" x="660" y="20" width="150" height="70" rx="8"/>
+<text class="t" x="735" y="48" text-anchor="middle">GA4 の画面</text>
+<text class="s" x="735" y="70" text-anchor="middle">探索・レポートで使える</text>
+<rect class="box" x="660" y="140" width="150" height="70" rx="8"/>
+<text class="t" x="735" y="168" text-anchor="middle">BigQuery</text>
+<text class="s" x="735" y="190" text-anchor="middle">登録なしで全部見える</text>
+<path class="edge" d="M170 115 L228 115" marker-end="url(#ah2)"/>
+<text class="el" x="199" y="106" text-anchor="middle">送信</text>
+<path class="edge" d="M380 105 C410 105 410 55 438 55" marker-end="url(#ah2)"/>
+<path class="edge" d="M600 55 L658 55" marker-end="url(#ah2)"/>
+<path class="edge-dash" d="M380 125 C410 125 410 175 658 175" marker-end="url(#ah2)"/>
+<text class="el" x="540" y="166" text-anchor="middle">エクスポート（登録不要）</text>
+<text class="warn-t" x="520" y="112" text-anchor="middle">登録より前のデータは対象外</text>
+</svg>
+<figcaption>GA4 の画面で使えるのは、カスタム定義に登録したパラメータだけです。しかも登録した時点以降に集計されたデータにしか効きません。BigQuery には最初から全部出ています。</figcaption>
+</figure>
+<p>つまり<strong>「送る」と「登録する」は別作業</strong>です。新しいパラメータを実装したら、同じタイミングで GA4 側にも登録するのを習慣にします。</p>
+<p>ただし <code>method</code> など既定ディメンションと同じ名前のパラメータは、登録しなくても見えます。</p>
+
+<h2 id="inventory">送っているパラメータの棚卸し</h2>
+<p>index.html のソースから、自分で送っている値を拾い出すとこうなります。登録するスコープもここで決めておきます。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>キー</th><th>種類</th><th>例</th><th>送っているイベント</th><th>登録するスコープ</th></tr></thead>
+<tbody>
+<tr><td><code>button_name</code></td><td>イベントパラメータ</td><td>資料ダウンロード</td><td><code>button_click</code></td><td>イベント</td></tr>
+<tr><td><code>section</code></td><td>イベントパラメータ</td><td>hero</td><td><code>button_click</code></td><td>イベント</td></tr>
+<tr><td><code>item_name</code></td><td>イベントパラメータ</td><td>プロプラン</td><td><code>view_item</code>, <code>add_to_cart</code></td><td>イベント</td></tr>
+<tr><td><code>form_id</code> / <code>field_name</code></td><td>イベントパラメータ</td><td>contact / email</td><td><code>form_field_focus</code>, <code>form_submit</code></td><td>イベント</td></tr>
+<tr><td><code>method</code></td><td>イベントパラメータ</td><td>email</td><td><code>sign_up</code></td><td>不要（既定ディメンション「方法」）</td></tr>
+<tr><td><code>price</code></td><td>イベントパラメータ（数値）</td><td>8000</td><td><code>view_item</code>, <code>add_to_cart</code></td><td>カスタム指標（任意）</td></tr>
+<tr><td><code>plan</code></td><td>ユーザープロパティ</td><td>pro</td><td>全イベント</td><td>ユーザー</td></tr>
+<tr><td><code>user_type</code></td><td>ユーザープロパティ</td><td>returning</td><td>全イベント</td><td>ユーザー</td></tr>
+<tr><td><code>app_user_id</code></td><td>ユーザープロパティ（イベントパラメータにも同じ値）</td><td>2222…2222</td><td>全イベント</td><td>ユーザー</td></tr>
+<tr><td><code>user_pattern</code></td><td>ユーザープロパティ（イベントパラメータにも同じ値）</td><td>b</td><td>全イベント</td><td>ユーザー</td></tr>
+</tbody></table></div>
+<div class="callout tip"><span class="label">補足</span>
+<p>realtime.html は <code>customUser:app_user_id</code> と <code>customUser:user_pattern</code> を Data API で参照しています。これはこの2つがユーザースコープで登録済みであることが前提です（07章）。</p></div>
+
+<h2 id="send">イベントを送って届いたか確かめる</h2>
+<ol class="steps">
+<li><h4>テストサイトで操作する</h4>
+<p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト</a>を開き、仮ユーザーで「B: 有料プラン / リピーター」を選びます。「資料ダウンロード」を3回、「商品一覧」タブで「プロプラン 詳細」を2回押します。</p>
+<label class="check"><input type="checkbox" id="s-send"> パターンBでイベントを送った</label></li>
+<li><h4>リアルタイムで生のパラメータを見る</h4>
+<p><span class="ui-path"><span>レポート</span><span>リアルタイムの概要</span></span> の「イベント数（イベント名）」カードで、イベント名、パラメータ名の順に押すと値が出ます。登録前でも見られます。</p>
+<ul>
+<li><code>button_click</code> › <code>button_name</code> → 資料ダウンロード</li>
+<li><code>view_item</code> › <code>item_name</code> → プロプラン</li>
+</ul>
+<label class="check"><input type="checkbox" id="s-realtime-raw"> リアルタイムのカードで2つの値を確認した</label></li>
+<li><h4>（任意）DebugView で1件ずつ見る</h4>
+<p><a href="https://tagassistant.google.com">Tag Assistant</a> を開いて「ドメインを追加」にテストサイトのURLを入れ、接続します。開いたタブで操作すると、<span class="ui-path"><span>管理</span><span>データの表示</span><span>DebugView</span></span> に端末が現れ、イベントごとのパラメータとユーザープロパティが時系列で見られます。</p>
+<label class="check"><input type="checkbox" id="s-debugview"> DebugView で user_properties の plan=pro を確認した</label></li>
+</ol>
+
+<h2 id="register">カスタムディメンションを登録する</h2>
+<p>場所は <span class="ui-path"><span>管理</span><span>データの表示</span><span>カスタム定義</span></span> の「カスタム ディメンション」タブです。登録には編集者以上の権限が必要です。</p>
+<ol class="steps">
+<li><h4>イベントスコープ: ボタン名</h4>
+<p>「カスタム ディメンションを作成」を押し、次のように入力して保存します。</p>
+<div class="table-wrap"><table class="form-table"><tbody>
+<tr><th>ディメンション名</th><td>ボタン名<br><small>画面に表示される名前。日本語でよい</small></td></tr>
+<tr><th>範囲</th><td>イベント</td></tr>
+<tr><th>説明</th><td>button_click で押されたボタンの名前</td></tr>
+<tr><th>イベント パラメータ</th><td><code>button_name</code><br><small>コードのキーと完全一致。大文字小文字も区別される。届いた実績があれば候補に出る</small></td></tr>
+</tbody></table></div>
+<label class="check"><input type="checkbox" id="r-button"> 「ボタン名」を登録した</label></li>
+<li><h4>イベントスコープ: 残りのパラメータ</h4>
+<p>同じ手順で、範囲は「イベント」のまま次の4つを登録します。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>ディメンション名</th><th>イベント パラメータ</th><th>説明</th></tr></thead>
+<tbody>
+<tr><td>セクション</td><td><code>section</code></td><td>button_click のボタンが置かれている場所（hero など）</td></tr>
+<tr><td>商品名</td><td><code>item_name</code></td><td>view_item / add_to_cart の商品名</td></tr>
+<tr><td>フォームID</td><td><code>form_id</code></td><td>フォームの識別子（contact）</td></tr>
+<tr><td>入力欄</td><td><code>field_name</code></td><td>form_field_focus でフォーカスした入力欄（name / email / message）</td></tr>
+</tbody></table></div>
+<label class="check"><input type="checkbox" id="r-events"> イベントスコープを4つ追加した</label></li>
+<li><h4>ユーザースコープ: プランなど</h4>
+<p>「範囲」を<strong>ユーザー</strong>にすると、入力欄が「ユーザー プロパティ」に変わります。次の4つを登録します。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>ディメンション名</th><th>ユーザー プロパティ</th><th>説明</th></tr></thead>
+<tbody>
+<tr><td>プラン</td><td><code>plan</code></td><td>契約プラン（free / pro / enterprise / churned）</td></tr>
+<tr><td>ユーザー種別</td><td><code>user_type</code></td><td>ユーザーの状態（new / returning / lead / dormant / anonymous）</td></tr>
+<tr><td>アプリユーザーID</td><td><code>app_user_id</code></td><td>自社サービスのユーザーID（UUID）</td></tr>
+<tr><td>ユーザーパターン</td><td><code>user_pattern</code></td><td>テストサイトの仮ユーザーのパターン（a〜d / random）</td></tr>
+</tbody></table></div>
+<label class="check"><input type="checkbox" id="r-users"> ユーザースコープを4つ登録した</label></li>
+<li><h4>（任意）カスタム指標: 価格</h4>
+<p>「カスタム指標」タブで「カスタム指標を作成」を押します。指標名「価格」、範囲「イベント」、イベントパラメータ <code>price</code>、測定単位「通貨」にすると、探索で合計や平均が出せます。数値として送っているパラメータだけが指標にできます。</p>
+<label class="check"><input type="checkbox" id="r-metric"> カスタム指標「価格」を登録した</label></li>
+</ol>
+<div class="callout warn"><span class="label">登録の注意</span>
+<ul>
+<li>登録は<strong>過去にさかのぼりません</strong>。登録後にもう一度テストサイトで操作しておくと、翌日の確認がスムーズです。</li>
+<li><code>app_user_id</code> と <code>user_pattern</code> はイベントパラメータとユーザープロパティの両方で送っていますが、登録はユーザースコープ1つで足ります。同じ値を2つの枠で登録すると上限を無駄に使います。</li>
+<li>ディメンションを「アーカイブ」しても枠はすぐ戻りません（48時間後）。上限が近いときは慎重に。</li>
+</ul></div>
+
+<h2 id="realtime">リアルタイムで絞り込む</h2>
+<p>カスタムディメンションは登録すると<strong>リアルタイムにはすぐ効きます</strong>。最大48時間かかるのは通常レポートと探索の方です。</p>
+<ol class="steps">
+<li><h4>比較を作る</h4>
+<p>リアルタイムの概要の上部で「比較を追加」を押し、「新規作成」で ディメンション「プラン」、条件「完全一致」、値「pro」を選んで適用します。すべてのカードが「すべてのユーザー」と「プラン = pro」の2系列になります。</p>
+<label class="check"><input type="checkbox" id="rt-compare"> プラン = pro の比較を作った</label></li>
+<li><h4>ユーザープロパティ別のカードを見る</h4>
+<p>「アクティブユーザー」カードの見出しを「ユーザープロパティ別」に切り替え、「ユーザーパターン」を選ぶと、パターンごとの人数が出ます。テストサイトでパターンを切り替えてイベントを送ると、数秒で変わります。</p>
+<label class="check"><input type="checkbox" id="rt-card"> パターン切り替えがカードに反映されるのを見た</label></li>
+</ol>
+<div class="table-wrap"><table>
+<thead><tr><th>見たいもの</th><th>場所</th><th>反映</th></tr></thead>
+<tbody>
+<tr><td>ユーザープロパティ別の即時集計</td><td>リアルタイムの概要の「アクティブユーザー: ユーザープロパティ別」カード</td><td>数秒</td></tr>
+<tr><td>絞り込んだ数値</td><td>リアルタイムの「比較を追加」</td><td>数秒</td></tr>
+<tr><td>ユーザー個別のイベント履歴</td><td>探索のユーザーエクスプローラ</td><td>数時間</td></tr>
+<tr><td>通常レポートでの集計</td><td>レポートのエンゲージメント › イベント</td><td>最大24〜48時間</td></tr>
+</tbody></table></div>
+<p>リアルタイムは過去30分固定で、カードの種類も決まっています。任意のディメンションと指標を組み合わせたいときは Data API を使います（07章の realtime.html）。</p>
+
+<h2 id="explore">探索で表を作る（翌日以降）</h2>
+<ol class="steps">
+<li><h4>空白の探索を開く</h4>
+<p><span class="ui-path"><span>探索</span><span>空白</span></span> を選びます。左の「変数」列でデータを選び、中央の「タブの設定」列で表の形を決める画面です。右上の期間は「今日」を含む範囲にします。</p></li>
+<li><h4>ディメンションと指標を読み込む</h4>
+<p>「ディメンション」の「＋」を押し、「カスタム」の中から「ボタン名」「プラン」を、「イベント」の中から「イベント名」を選んで「インポート」します。「指標」の「＋」からは「イベント数」「総ユーザー数」を入れます。</p></li>
+<li><h4>表を組み立てる</h4>
+<div class="table-wrap"><table class="form-table"><tbody>
+<tr><th>手法</th><td>自由形式</td></tr>
+<tr><th>行</th><td>ボタン名</td></tr>
+<tr><th>列</th><td>プラン</td></tr>
+<tr><th>値</th><td>イベント数</td></tr>
+<tr><th>フィルタ</th><td>イベント名 完全一致 <code>button_click</code></td></tr>
+</tbody></table></div>
+<p>「プランごとに、どのボタンが何回押されたか」の表になります。フィルタを外すと、<code>button_click</code> 以外のイベントの行が <code>(not set)</code> として出てくることも確かめてみてください。</p>
+<label class="check"><input type="checkbox" id="ex-table"> ボタン名 × プランの表を作った</label></li>
+<li><h4>ユーザーエクスプローラで1人を追う</h4>
+<p><span class="ui-path"><span>探索</span><span>ユーザー エクスプローラ</span></span> を開くと、User-ID（またはアプリインスタンスID）ごとの行が出ます。<code>22222222-bbbb-…</code> をクリックすると、そのユーザーのイベントが時系列で見られます。</p>
+<label class="check"><input type="checkbox" id="ex-user"> パターンBのユーザーの行動履歴を開いた</label></li>
+</ol>
+
+<h2 id="report">標準レポートで見る（翌日以降）</h2>
+<ol class="steps">
+<li><h4>イベントの詳細を開く</h4>
+<p><span class="ui-path"><span>レポート</span><span>エンゲージメント</span><span>イベント</span></span> で <code>button_click</code> の行をクリックします。詳細ページに、登録したイベントスコープのディメンション（ボタン名・セクション）のカードが自動で出ます。</p>
+<label class="check"><input type="checkbox" id="rp-detail"> イベント詳細にボタン名のカードが出た</label></li>
+<li><h4>表にディメンションを足す</h4>
+<p>レポート右上の鉛筆アイコン（レポートをカスタマイズ）から「ディメンション」を開き、「ディメンションを追加」で「プラン」を足して保存します。表の切り替えメニューからプラン別に見られるようになります。</p></li>
+</ol>
+
+<h2 id="key">キーイベントを設定する</h2>
+<p>キーイベント（旧称コンバージョン）は「事業上の成果」として特別に数えるイベントです。登録すると、集客レポートなどに「キーイベント数」が出るようになります。</p>
+<ol class="steps">
+<li><h4>sign_up をキーイベントにする</h4>
+<p><span class="ui-path"><span>管理</span><span>データの表示</span><span>イベント</span></span> で <code>sign_up</code> の行の星アイコン（キーイベントとしてマーク）をオンにします。まだ一度も届いていないイベント名は「キーイベント」画面の「新しいキーイベント」から名前で作れます。</p>
+<label class="check"><input type="checkbox" id="k-signup"> sign_up をキーイベントにした</label></li>
+</ol>
+
+<h2 id="trouble">出てこないときのチェックリスト</h2>
+<ul>
+<li><strong>登録前のデータを見ていないか</strong>。登録日時より前はすべて <code>(not set)</code> になります。</li>
+<li><strong>パラメータ名が完全一致しているか</strong>。<code>buttonName</code> と <code>button_name</code> は別物です。</li>
+<li><strong>値が長すぎないか</strong>。100文字（ユーザープロパティは36文字）を超えると切り捨てられます。</li>
+<li><strong>そのイベントに値が付いているか</strong>。付いていないイベントの行は <code>(not set)</code> です。</li>
+<li><strong>しきい値が出ていないか</strong>。表の右上に注意マークが出ていれば、少人数のため非表示になっています。</li>
+<li><strong>既定ディメンションに同じ名前がないか</strong>。<code>method</code> などは登録なしで既定の名前（「方法」など）で出ています。</li>
+<li><strong>まだ48時間たっていないか</strong>。探索と標準レポートは処理待ちのことがあります。</li>
+</ul>
+<p>どうしても画面で見えない値は、BigQuery で直接確かめるのが確実です。06章で <code>button_name</code> を SQL で取り出します。</p>
+<nav class="pager" aria-label="前後の章">
+<a class="prev" href="ga4-basics.html"><small>← 前の章 01</small>GA4の基礎</a>
+<a class="next" href="gtm-basics.html"><small>次の章 03 →</small>GTMの基礎</a>
+</nav>
+</div>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>01 GA4の基礎 | GA4・GTM・BigQuery 学習ガイド</title>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" />
+<link rel="stylesheet" href="assets/guide.css" />
+</head>
+<body>
+<div class="shell" data-page-id="ga4-basics">
+<aside class="side">
+<a class="brand" href="index.html">GA4・GTM・BigQuery<small>学習ガイド</small></a>
+<nav class="chapters" aria-label="章">
+<a data-page="index" href="index.html"><span class="no">00</span><span>全体像とロードマップ</span></a>
+<p class="group">GA4</p>
+<a data-page="ga4-basics" href="ga4-basics.html"><span class="no">01</span><span>GA4の基礎</span></a>
+<a data-page="ga4-custom-dimensions" href="ga4-custom-dimensions.html"><span class="no">02</span><span>カスタムディメンションを画面で見る</span></a>
+<p class="group">GTM</p>
+<a data-page="gtm-basics" href="gtm-basics.html"><span class="no">03</span><span>GTMの基礎</span></a>
+<a data-page="gtm-tutorial" href="gtm-tutorial.html"><span class="no">04</span><span>GTMを実際に使う</span></a>
+<p class="group">BigQuery</p>
+<a data-page="bigquery-basics" href="bigquery-basics.html"><span class="no">05</span><span>BigQueryの基礎</span></a>
+<a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
+<a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
+</nav>
+<div class="side-links"><p>練習用のページ</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム</a></div>
+</aside>
+<main>
+<div class="content">
+<div class="kicker"><span class="chip">01</span><span class="chip kind-basic">基礎</span><span class="chip t-ga4">GA4</span></div>
+<h1>GA4の基礎</h1>
+<p class="lead">GA4（Google アナリティクス 4）は「すべてをイベントとして記録する」計測ツールです。この章では、データがどんな形で記録され、どこで見られて、どんな制約があるかを押さえます。</p>
+
+<div class="toc"><p>この章の内容</p><ol>
+<li><a href="#model">データモデル: すべてはイベント</a></li>
+<li><a href="#hierarchy">アカウント・プロパティ・データストリーム</a></li>
+<li><a href="#events">イベントの4分類</a></li>
+<li><a href="#scope">ディメンション・指標・スコープ</a></li>
+<li><a href="#identity">ユーザーとセッションの識別</a></li>
+<li><a href="#implement">計測を実装する3つの方法</a></li>
+<li><a href="#ui">GA4 画面の見取り図</a></li>
+<li><a href="#limits">覚えておくべき上限値</a></li>
+<li><a href="#check">確認テスト</a></li>
+</ol></div>
+
+<h2 id="model">データモデル: すべてはイベント</h2>
+<p>旧 Google アナリティクス（UA）は「ページビュー」「イベント」「トランザクション」など種類の違うヒットを記録していました。GA4 ではページビューもスクロールも購入も、すべて同じ形の<strong>イベント</strong>です。1つのイベントは次の要素でできています。</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>要素</th><th>例（このリポジトリの index.html）</th><th>誰が付けるか</th></tr></thead>
+<tbody>
+<tr><td>イベント名</td><td><code>button_click</code></td><td>自分</td></tr>
+<tr><td>イベントパラメータ</td><td><code>button_name: "資料ダウンロード"</code>, <code>section: "hero"</code></td><td>自分</td></tr>
+<tr><td>自動で付くパラメータ</td><td><code>page_location</code>, <code>page_title</code>, <code>ga_session_id</code>, <code>engagement_time_msec</code></td><td>GA4（gtag.js）</td></tr>
+<tr><td>ユーザープロパティ</td><td><code>plan: "pro"</code>, <code>user_type: "returning"</code></td><td>自分（一度セットすると以降のイベントに付く）</td></tr>
+<tr><td>ユーザー識別子</td><td><code>user_pseudo_id</code>（自動）、<code>user_id</code>（任意）</td><td>GA4 / 自分</td></tr>
+<tr><td>端末・地域など</td><td>ブラウザ、OS、国、市区町村、流入元</td><td>GA4 が自動で付与</td></tr>
+</tbody></table></div>
+
+<p>index.html のボタンを押したときに実際に動いているコードはこれだけです。</p>
+<pre data-lang="javascript"><code>gtag("event", "button_click", {
+  button_name: "資料ダウンロード",
+  section: "hero",
+});</code></pre>
+
+<div class="callout key"><span class="label">この章の一番大事なこと</span>
+<p>送ったパラメータは GA4 に<strong>届いて保存されます</strong>。しかし GA4 の画面（レポートや探索）で使うには、<strong>カスタムディメンションとして登録</strong>する必要があります。BigQuery には登録しなくても全部入ります。この違いが次章以降のテーマです。</p>
+<p>例外として、<code>method</code>・<code>content_type</code>・<code>search_term</code> など GA4 の既定ディメンションと同じ名前のパラメータは、登録なしで見えます。独自イベントで送っても同じです。</p></div>
+
+<h2 id="hierarchy">アカウント・プロパティ・データストリーム</h2>
+<pre data-lang="tree"><code>アカウント（会社・組織の単位）         a235761773
+└── プロパティ（分析の単位。レポートはここ） 324810718
+    ├── データストリーム: ウェブ          測定ID G-FEHSK6QJLE
+    ├── データストリーム: iOS アプリ      （このリポジトリでは未使用）
+    └── データストリーム: Android アプリ</code></pre>
+<ul>
+<li><strong>プロパティ</strong>がレポート・カスタム定義・BigQuery リンクの単位です。サイトとアプリを1つのプロパティにまとめて分析できます。</li>
+<li><strong>測定ID</strong>（<code>G-</code>）はウェブのデータストリームに付くIDで、タグに書くのはこれです。</li>
+<li><strong>プロパティID</strong>（数字）は API や BigQuery のデータセット名（<code>analytics_324810718</code>）で使います。</li>
+</ul>
+
+<h2 id="events">イベントの4分類</h2>
+<p>自分でコードを書かなくても多くのイベントが記録されます。何が自動で、何を自分で送るべきかを区別しておくと設計が楽になります。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>分類</th><th>代表例</th><th>設定</th></tr></thead>
+<tbody>
+<tr><td>自動収集イベント</td><td><code>first_visit</code>, <code>session_start</code>, <code>user_engagement</code></td><td>タグを入れるだけで記録</td></tr>
+<tr><td>拡張計測機能</td><td><code>page_view</code>, <code>scroll</code>（90%到達）, <code>click</code>（外部リンク）, <code>file_download</code>, <code>view_search_results</code>, <code>video_start</code>, <code>form_start</code>, <code>form_submit</code></td><td><span class="ui-path"><span>管理</span><span>データの収集と修正</span><span>データストリーム</span><span>拡張計測機能</span></span> でオン・オフ</td></tr>
+<tr><td>推奨イベント</td><td><code>sign_up</code>, <code>login</code>, <code>view_item</code>, <code>add_to_cart</code>, <code>purchase</code></td><td>Google が名前とパラメータを決めている。自分で送る</td></tr>
+<tr><td>カスタムイベント</td><td><code>button_click</code>, <code>form_field_focus</code>, <code>user_switch</code></td><td>名前もパラメータも自由。自分で送る</td></tr>
+</tbody></table></div>
+<div class="callout tip"><span class="label">設計のコツ</span>
+<p>推奨イベントに当てはまるものは、その名前とパラメータ名（<code>value</code>, <code>currency</code>, <code>items</code> など）で送ります。GA4 の既定のレポート（収益化など）が自動で埋まり、推奨のパラメータ名の値は登録なしでディメンションとして使えます。拡張計測と同じ名前（<code>form_submit</code> など）を自作イベントに使うと集計が混ざるので避けるのが無難です。</p></div>
+
+<h2 id="scope">ディメンション・指標・スコープ</h2>
+<ul>
+<li><strong>ディメンション</strong>: 切り口。文字列の属性。例: ページタイトル、デバイス、ボタン名。</li>
+<li><strong>指標</strong>: 数値。例: イベント数、アクティブユーザー数、セッション数、収益。</li>
+</ul>
+<p>レポートは「ディメンション × 指標」の表です。自分で送った値をディメンションや指標として使うときは<strong>スコープ</strong>を選んで登録します。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>スコープ</th><th>元になる値</th><th>値の持続</th><th>例</th></tr></thead>
+<tbody>
+<tr><td>イベント</td><td>イベントパラメータ</td><td>そのイベント1件だけ</td><td><code>button_name</code>, <code>section</code></td></tr>
+<tr><td>ユーザー</td><td>ユーザープロパティ</td><td>セット後のすべてのイベント</td><td><code>plan</code>, <code>user_type</code></td></tr>
+<tr><td>アイテム</td><td><code>items</code> 配列の中のキー</td><td>その商品行だけ</td><td><code>item_color</code></td></tr>
+</tbody></table></div>
+<p>セッションスコープのディメンション（参照元やランディングページ）は GA4 が用意したものだけで、自作はできません。</p>
+
+<h2 id="identity">ユーザーとセッションの識別</h2>
+<h3>3つのID</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>正体</th><th>範囲</th></tr></thead>
+<tbody>
+<tr><td><code>user_pseudo_id</code></td><td>Cookie <code>_ga</code> に入るブラウザ単位のID。自動</td><td>同じブラウザの間だけ同一人物</td></tr>
+<tr><td><code>user_id</code></td><td>自分で送るログインIDなど</td><td>端末やブラウザをまたいでまとめられる</td></tr>
+<tr><td>Google シグナル</td><td>Google アカウントにログイン中のユーザー情報</td><td>有効にするとデモグラフィックなどが使えるが、しきい値（少人数の非表示）が出やすくなる</td></tr>
+</tbody></table></div>
+<p>どのIDを優先してユーザーを数えるかは <span class="ui-path"><span>管理</span><span>データの表示</span><span>レポート ID</span></span> で選びます（「ハイブリッド」「計測データ」「デバイスベース」）。</p>
+
+<h3>セッション</h3>
+<p>セッションは「ひと続きの訪問」です。最後の操作から30分（既定）何もしないと切れます。各イベントには <code>ga_session_id</code>（セッション開始時刻）と <code>ga_session_number</code>（何回目の訪問か）が自動で付きます。BigQuery では <code>user_pseudo_id</code> と <code>ga_session_id</code> の組み合わせで1セッションを数えます（06章）。</p>
+
+<h3 id="userid">このリポジトリでの実践: user_id と user_properties</h3>
+<p>index.html は仮ユーザーのUUIDを2通りの形で送っています。値は同じでも役割と使える場所が違います。</p>
+<div class="table-wrap"><table>
+<thead><tr><th></th><th><code>user_id</code></th><th><code>user_properties</code></th></tr></thead>
+<tbody>
+<tr><td>正体</td><td>GA4 の予約された識別子</td><td>自作のユーザースコープ属性</td></tr>
+<tr><td>設定作業</td><td><span class="ui-path"><span>管理</span><span>データの表示</span><span>レポート ID</span></span> で有効化</td><td><span class="ui-path"><span>管理</span><span>データの表示</span><span>カスタム定義</span></span> に登録</td></tr>
+<tr><td>レポートで絞り込み</td><td><strong>できない</strong></td><td>できる（比較・セグメント）</td></tr>
+<tr><td>ユーザーエクスプローラ</td><td><strong>できる</strong>（行が User-ID になる）</td><td>—</td></tr>
+<tr><td>BigQuery</td><td><code>user_id</code> 列</td><td><code>user_properties</code> 列（ARRAY of STRUCT）</td></tr>
+</tbody></table></div>
+<pre data-lang="javascript"><code><span class="c">// user_properties は値が36文字までなので UUID がちょうど収まる</span>
+gtag("set", "user_properties", {
+  app_user_id: uuid,
+  plan: "pro",
+  user_type: "returning",
+});
+gtag("config", "G-FEHSK6QJLE", { user_id: uuid });</code></pre>
+<ul>
+<li><strong>IDを途中で切り替える場合</strong>: <code>gtag('config')</code> を再実行します。そのままだと <code>page_view</code> が重複送信されるので <code>send_page_view: false</code> を付けます。</li>
+<li><strong>debug_mode の注意</strong>: 公式ドキュメントには <code>gtag('config', ID, {debug_mode: true})</code> で DebugView に出るとあります。実測すると現在の gtag.js は <code>ep.debug_mode=true</code>（ただのイベントパラメータ）として送るだけで、DebugView には現れませんでした。DebugView を使うときは <a href="https://tagassistant.google.com">Tag Assistant</a> で接続するか、Chrome 拡張の Google Analytics Debugger を使います。</li>
+</ul>
+
+<h2 id="implement">計測を実装する3つの方法</h2>
+<h3>1. gtag.js を直書きする（index.html の方式）</h3>
+<p>すべてのページの <code>&lt;head&gt;</code> に次を入れます。<code>gtag()</code> は引数を <code>dataLayer</code> に積むだけの小さな関数で、読み込まれた gtag.js がそれを読んで送信します。</p>
+<pre data-lang="html"><code>&lt;script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"&gt;&lt;/script&gt;
+&lt;script&gt;
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { dataLayer.push(arguments); }
+  gtag("js", new Date());
+  gtag("config", "G-XXXXXXXXXX");
+&lt;/script&gt;</code></pre>
+<p>カスタムイベントは <code>gtag("event", イベント名, パラメータ)</code> で送ります。</p>
+<pre data-lang="javascript"><code>gtag("event", "button_click", { button_name: "購入ボタン" });</code></pre>
+
+<h3>2. Google タグマネージャー（GTM）を使う（gtm.html の方式）</h3>
+<p>ページには GTM のコンテナを1つ入れるだけにして、「どのクリックで何を送るか」を GTM の管理画面で設定します。コードを変えずに計測を追加・修正できます。詳しくは 03・04章で扱います。</p>
+
+<h3>3. Measurement Protocol（サーバーから送る）</h3>
+<p>決済完了や解約など、サーバー側で確定する出来事を HTTP で直接 GA4 に送る方法です。<span class="ui-path"><span>管理</span><span>データの収集と修正</span><span>データストリーム</span><span>Measurement Protocol API secret</span></span> でシークレットを発行して使います。ブラウザ計測の補完として使うもので、このリポジトリでは扱いません。</p>
+
+<div class="callout warn"><span class="label">二重計測に注意</span>
+<p>gtag.js の直書きと、同じ測定IDの Google タグを入れた GTM を同じページに置くと、<code>page_view</code> などが2回ずつ送られます。どちらか一方に寄せます。このリポジトリでは index.html が gtag.js、gtm.html が GTM と、ページを分けています。</p></div>
+
+<h2 id="ui">GA4 画面の見取り図</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>場所</th><th>何ができるか</th><th>反映までの時間</th></tr></thead>
+<tbody>
+<tr><td><span class="ui-path"><span>レポート</span><span>リアルタイム</span></span></td><td>過去30分のユーザー・イベント。カードは固定</td><td>数秒</td></tr>
+<tr><td><span class="ui-path"><span>管理</span><span>データの表示</span><span>DebugView</span></span></td><td>デバッグ中の端末のイベントを1件ずつ時系列で見る</td><td>数秒</td></tr>
+<tr><td><span class="ui-path"><span>レポート</span><span>エンゲージメント</span><span>イベント</span></span> など</td><td>集計済みの定型レポート。期間比較・フィルタ</td><td>最大24〜48時間</td></tr>
+<tr><td><span class="ui-path"><span>探索</span></span></td><td>自由形式の表、ファネル、経路、ユーザーエクスプローラなど</td><td>最大24〜48時間</td></tr>
+<tr><td><span class="ui-path"><span>管理</span></span></td><td>データストリーム、カスタム定義、キーイベント、BigQuery リンク、データ保持</td><td>—</td></tr>
+</tbody></table></div>
+<h3>画面で数字が「おかしく」見える3つの理由</h3>
+<ul>
+<li><strong>しきい値</strong>: 少人数のデータは個人が特定されないよう非表示になります。Google シグナル有効時に起きやすいです。</li>
+<li><strong>(other)</strong>: 1日の行数が上限を超えると、値の種類が多いディメンション（UUIDなど）は <code>(other)</code> にまとめられます。</li>
+<li><strong>(not set)</strong>: そのイベントにパラメータが付いていない行です。たとえば「ボタン名」で <code>page_view</code> を見ると <code>(not set)</code> になります。</li>
+</ul>
+
+<h2 id="limits">覚えておくべき上限値</h2>
+<p>標準（無料）プロパティの主な上限です。超えた分は切り捨てや無視になり、エラーは出ないので、設計時に意識しておきます。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>項目</th><th class="num">上限</th></tr></thead>
+<tbody>
+<tr><td>イベント名の長さ</td><td class="num">40文字</td></tr>
+<tr><td>1イベントあたりのパラメータ数</td><td class="num">25個</td></tr>
+<tr><td>パラメータ名の長さ</td><td class="num">40文字</td></tr>
+<tr><td>パラメータ値の長さ（<code>page_location</code> などを除く）</td><td class="num">100文字</td></tr>
+<tr><td>ユーザープロパティ名 / 値の長さ</td><td class="num">24文字 / 36文字</td></tr>
+<tr><td>イベントスコープのカスタムディメンション</td><td class="num">50個</td></tr>
+<tr><td>ユーザースコープのカスタムディメンション</td><td class="num">25個</td></tr>
+<tr><td>アイテムスコープのカスタムディメンション</td><td class="num">10個</td></tr>
+<tr><td>カスタム指標</td><td class="num">50個</td></tr>
+<tr><td>探索で使えるデータの保持期間</td><td class="num">2か月 or 14か月</td></tr>
+</tbody></table></div>
+<p>データ保持期間は <span class="ui-path"><span>管理</span><span>データの収集と修正</span><span>データ保持</span></span> で変えられます。既定は2か月なので、作ったらすぐ14か月に変えておくのがおすすめです。標準レポートの集計値はこの設定に関係なく残ります。カスタムディメンションを削除して枠を空けた場合、同じ枠を使えるのは48時間後です。</p>
+
+<h2 id="check">確認テスト</h2>
+<p>答えられたらチェックを入れます。</p>
+<label class="check"><input type="checkbox" id="q-event"> index.html の「カートに追加」ボタンで送られるイベント名とパラメータを言える（ヒント: ソースの <code>sendEvent('add_to_cart', …)</code>）。</label>
+<label class="check"><input type="checkbox" id="q-scope"> <code>plan</code> を<strong>イベント</strong>スコープではなく<strong>ユーザー</strong>スコープで登録する理由を説明できる。</label>
+<label class="check"><input type="checkbox" id="q-id"> <code>user_pseudo_id</code> と <code>user_id</code> の違いと、User-ID でレポートを絞り込めない理由を説明できる。</label>
+<label class="check"><input type="checkbox" id="q-double"> gtag.js と GTM を同じページに入れると何が起きるか説明できる。</label>
+<label class="check"><input type="checkbox" id="q-retention"> 自分のプロパティのデータ保持期間を確認し、14か月にした。</label>
+<nav class="pager" aria-label="前後の章">
+<a class="prev" href="index.html"><small>← 前の章 00</small>全体像とロードマップ</a>
+<a class="next" href="ga4-custom-dimensions.html"><small>次の章 02 →</small>カスタムディメンションを画面で見る</a>
+</nav>
+</div>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>06 GA4データをBigQueryへ | GA4・GTM・BigQuery 学習ガイド</title>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" />
+<link rel="stylesheet" href="assets/guide.css" />
+</head>
+<body>
+<div class="shell" data-page-id="bigquery-export">
+<aside class="side">
+<a class="brand" href="index.html">GA4・GTM・BigQuery<small>学習ガイド</small></a>
+<nav class="chapters" aria-label="章">
+<a data-page="index" href="index.html"><span class="no">00</span><span>全体像とロードマップ</span></a>
+<p class="group">GA4</p>
+<a data-page="ga4-basics" href="ga4-basics.html"><span class="no">01</span><span>GA4の基礎</span></a>
+<a data-page="ga4-custom-dimensions" href="ga4-custom-dimensions.html"><span class="no">02</span><span>カスタムディメンションを画面で見る</span></a>
+<p class="group">GTM</p>
+<a data-page="gtm-basics" href="gtm-basics.html"><span class="no">03</span><span>GTMの基礎</span></a>
+<a data-page="gtm-tutorial" href="gtm-tutorial.html"><span class="no">04</span><span>GTMを実際に使う</span></a>
+<p class="group">BigQuery</p>
+<a data-page="bigquery-basics" href="bigquery-basics.html"><span class="no">05</span><span>BigQueryの基礎</span></a>
+<a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
+<a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
+</nav>
+<div class="side-links"><p>練習用のページ</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム</a></div>
+</aside>
+<main>
+<div class="content">
+<div class="kicker"><span class="chip">06</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-bq">BigQuery</span><span class="chip t-ga4">GA4</span></div>
+<h1>GA4データをBigQueryへ</h1>
+<p class="lead">GA4 の BigQuery エクスポートを設定すると、1イベント1行の生データが毎日 BigQuery に届きます。この章では設定の手順、届くテーブルの構造、そして GA4 データ特有の <code>UNNEST</code> を使った SQL を、このリポジトリのデータで練習します。</p>
+
+<div class="toc"><p>この章の内容</p><ol>
+<li><a href="#setup">エクスポートを設定する</a></li>
+<li><a href="#tables">届くテーブル</a></li>
+<li><a href="#schema">1行の中身（スキーマ）</a></li>
+<li><a href="#unnest">UNNEST の考え方</a></li>
+<li><a href="#diff">GA4 画面と数字が合わない理由</a></li>
+<li><a href="#recipes">SQL レシピ集</a></li>
+<li><a href="#ops">運用: ビューと定期実行</a></li>
+</ol></div>
+
+<h2 id="setup">エクスポートを設定する</h2>
+<p>このリポジトリのプロパティでは設定済みです。新しく設定するときの手順を残しておきます。</p>
+<ol class="steps">
+<li><h4>権限と GCP プロジェクトを用意する</h4>
+<p>GA4 プロパティの編集者以上の権限と、GCP プロジェクトのオーナー権限が必要です。プロジェクトで BigQuery API が有効になっていることを確認します。ストリーミングを使う場合は課金アカウントの紐づけも必要です。</p></li>
+<li><h4>GA4 側でリンクを作る</h4>
+<p><span class="ui-path"><span>管理</span><span>サービス間のリンク設定</span><span>BigQuery のリンク</span></span> で「リンク」を押し、プロジェクトを選びます。メニューの表記は UI の更新で変わることがあり、以前は「プロダクトのリンク設定」でした。</p></li>
+<li><h4>オプションを選ぶ</h4>
+<div class="table-wrap"><table class="form-table"><tbody>
+<tr><th>データのロケーション</th><td><code>asia-northeast1</code>（東京）<br><small>後から変えられない。結合したい他のデータと同じ場所にする</small></td></tr>
+<tr><th>データストリームとイベント</th><td>対象のストリームを選ぶ。不要なイベントを除外できる</td></tr>
+<tr><th>頻度</th><td><strong>毎日</strong>（無料、翌日に前日分）と <strong>ストリーミング</strong>（有料、数分遅れ）。両方選べる</td></tr>
+<tr><th>ユーザーデータ</th><td>ユーザー単位のテーブル（<code>users_</code> / <code>pseudonymous_users_</code>）も出すか</td></tr>
+</tbody></table></div></li>
+<li><h4>送信して翌日を待つ</h4>
+<p>データセット <code>analytics_&lt;プロパティID&gt;</code> が自動で作られ、翌日から日次テーブルが入り始めます。プロジェクトには <code>firebase-measurement@system.gserviceaccount.com</code> というサービスアカウントが自動で追加されます。これを消すとエクスポートが止まります。</p></li>
+</ol>
+<div class="callout warn"><span class="label">上限とコスト</span>
+<ul>
+<li>標準（無料）プロパティの日次エクスポートは<strong>1日100万イベント</strong>までです。継続して超えると日次エクスポートが一時停止します。イベントの除外で減らします。</li>
+<li>ストリーミングには件数の上限はありませんが、BigQuery のストリーミング挿入として課金されます。完全性の保証もありません。使い終わったらオフにします。</li>
+</ul></div>
+
+<h2 id="tables">届くテーブル</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>テーブル</th><th>内容</th><th>届くタイミング</th></tr></thead>
+<tbody>
+<tr><td><code>events_YYYYMMDD</code></td><td>その日の全イベント。1行1イベント</td><td>日次。前日分が翌日に届く（無料）</td></tr>
+<tr><td><code>events_intraday_YYYYMMDD</code></td><td>当日分の途中経過</td><td>ストリーミング。数分遅れ（$0.05/GB 相当）。日次テーブルができると消える</td></tr>
+<tr><td><code>pseudonymous_users_YYYYMMDD</code></td><td><code>user_pseudo_id</code> ごとの最新の属性</td><td>ユーザーデータのエクスポートを有効にした場合</td></tr>
+<tr><td><code>users_YYYYMMDD</code></td><td><code>user_id</code> ごとの最新の属性</td><td>同上。user_id を送っている場合</td></tr>
+</tbody></table></div>
+<p>日付はプロパティのタイムゾーン（管理画面の設定）で区切られます。</p>
+
+<h2 id="schema">1行の中身（スキーマ）</h2>
+<p>主な列です。<code>[]</code> は ARRAY、<code>{}</code> は STRUCT を表します。</p>
+<pre data-lang="schema"><code>event_date                 STRING   '20260401'（プロパティのタイムゾーン）
+event_timestamp            INT64    マイクロ秒の UNIX 時刻（UTC）
+event_name                 STRING   'button_click'
+event_params[]             ARRAY&lt;STRUCT&gt;
+  ├─ key                   STRING   'button_name'
+  └─ value {}
+       ├─ string_value     STRING   '資料ダウンロード'
+       ├─ int_value        INT64    （整数で送った値）
+       ├─ float_value      FLOAT64  （ほぼ使われない）
+       └─ double_value     FLOAT64  （小数で送った値）
+user_id                    STRING   gtag の user_id
+user_pseudo_id             STRING   Cookie ベースのID
+user_properties[]          ARRAY&lt;STRUCT&gt;  key / value{string_value, int_value, …, set_timestamp_micros}
+user_first_touch_timestamp INT64
+device {}                  category, operating_system, web_info{browser, hostname} など
+geo {}                     country, region, city など
+traffic_source {}          ユーザーの初回流入元（source, medium, name）
+collected_traffic_source{} そのイベントで取れた流入元（utm パラメータなど）
+session_traffic_source_last_click {}  セッションの流入元
+ecommerce {}               transaction_id, purchase_revenue など
+items[]                    item_id, item_name, price, quantity など
+platform, stream_id        'WEB', データストリームID</code></pre>
+<div class="callout key"><span class="label">GA4 画面との一番の違い</span>
+<p>送ったパラメータは<strong>カスタムディメンションに登録していなくても</strong>、すべて <code>event_params</code> に入っています。値の型によって入る列が変わるのにも注意します。<code>price: 8000</code> は <code>int_value</code>、<code>price: 8000.5</code> なら <code>double_value</code>、<code>"8000"</code> と文字列で送れば <code>string_value</code> です。</p></div>
+
+<h2 id="unnest">UNNEST の考え方</h2>
+<figure class="diagram">
+<svg viewBox="0 0 900 200" role="img" aria-label="event_params に3つの要素を持つ1行が、UNNEST すると key と value を持つ3行に展開される">
+<defs><marker id="ah6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="head-strong"/></marker></defs>
+<text class="s" x="20" y="28">元のテーブル: 1行</text>
+<rect class="box" x="20" y="40" width="130" height="28"/>
+<rect class="box" x="150" y="40" width="250" height="28"/>
+<text class="t" x="85" y="59" text-anchor="middle">event_name</text>
+<text class="t" x="275" y="59" text-anchor="middle">event_params</text>
+<rect class="box-plain" x="20" y="68" width="130" height="96"/>
+<text class="tm" x="85" y="121" text-anchor="middle">button_click</text>
+<rect class="box-plain" x="150" y="68" width="250" height="32"/>
+<rect class="box-plain" x="150" y="100" width="250" height="32"/>
+<rect class="box-plain" x="150" y="132" width="250" height="32"/>
+<text class="tm" x="162" y="89">button_name: 資料ダウンロード</text>
+<text class="tm" x="162" y="121">section: hero</text>
+<text class="tm" x="162" y="153">ga_session_id: 1775012345</text>
+
+<path class="edge-strong" d="M420 116 L500 116" marker-end="url(#ah6)"/>
+<text class="el-strong" x="460" y="106" text-anchor="middle">UNNEST</text>
+
+<text class="s" x="520" y="28">展開後: 3行</text>
+<rect class="box" x="520" y="40" width="120" height="28"/>
+<rect class="box" x="640" y="40" width="110" height="28"/>
+<rect class="box" x="750" y="40" width="130" height="28"/>
+<text class="t" x="580" y="59" text-anchor="middle">event_name</text>
+<text class="t" x="695" y="59" text-anchor="middle">p.key</text>
+<text class="t" x="815" y="59" text-anchor="middle">p.value</text>
+<rect class="box-strong" x="520" y="68" width="360" height="32"/>
+<rect class="box-plain" x="520" y="100" width="360" height="32"/>
+<rect class="box-plain" x="520" y="132" width="360" height="32"/>
+<text class="tm" x="530" y="89">button_click</text><text class="tm" x="650" y="89">button_name</text><text class="tm" x="760" y="89">資料ダウンロード</text>
+<text class="tm" x="530" y="121">button_click</text><text class="tm" x="650" y="121">section</text><text class="tm" x="760" y="121">hero</text>
+<text class="tm" x="530" y="153">button_click</text><text class="tm" x="650" y="153">ga_session_id</text><text class="tm" x="760" y="153">1775012345</text>
+<text class="s" x="520" y="188">WHERE p.key = 'button_name' で緑の1行だけ残る</text>
+</svg>
+<figcaption><code>FROM テーブル, UNNEST(event_params) AS p</code> は、配列の要素の数だけ元の行を複製して横に並べます。そのまま <code>COUNT(*)</code> すると件数が膨らむので、欲しい key で絞るか、次のサブクエリの書き方を使います。</figcaption>
+</figure>
+
+<h3>2つの書き方</h3>
+<pre data-lang="sql"><code><span class="c">-- 書き方1: FROM で UNNEST して WHERE で key を絞る（パラメータ1つだけ見たいとき）</span>
+SELECT ep.value.string_value AS page_location, COUNT(*) AS pageviews
+FROM `big-query-sample-492309.analytics_324810718.events_*`,
+  UNNEST(event_params) AS ep
+WHERE _TABLE_SUFFIX BETWEEN '20260301' AND '20260401'
+  AND event_name = 'page_view'
+  AND ep.key = 'page_location'
+GROUP BY page_location;
+
+<span class="c">-- 書き方2: SELECT の中のサブクエリで1つずつ取り出す（複数のパラメータを列にしたいとき。おすすめ）</span>
+SELECT
+  event_name,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'button_name') AS button_name,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'section') AS section
+FROM `big-query-sample-492309.analytics_324810718.events_*`
+WHERE _TABLE_SUFFIX BETWEEN '20260301' AND '20260401'
+  AND event_name = 'button_click';</code></pre>
+<p>書き方2なら1イベント1行のまま、パラメータを列として並べられます。行が増えないので集計を間違えにくいです。</p>
+
+<h2 id="diff">GA4 画面と数字が合わない理由</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>理由</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>集計方法</td><td>GA4 画面のユーザー数は HyperLogLog++ による推定値。BigQuery の <code>COUNT(DISTINCT)</code> は正確な値なので少しずれる</td></tr>
+<tr><td>しきい値・モデリング</td><td>GA4 画面は少人数データの非表示や、同意していないユーザーの推計を含むことがある。BigQuery は届いた生データだけ</td></tr>
+<tr><td>レポート ID</td><td>GA4 画面は User-ID やシグナルでユーザーをまとめる。BigQuery で何を数えるかは自分で決める</td></tr>
+<tr><td>タイムゾーン</td><td><code>event_date</code> はプロパティのタイムゾーン、<code>event_timestamp</code> は UTC</td></tr>
+<tr><td>当日分</td><td>日次テーブルは翌日にならないと届かない</td></tr>
+</tbody></table></div>
+<p>完全一致を目指すより、「傾向が合っていればよい」「正確なユーザー単位の履歴は BigQuery が正」と役割を分けて考えます。</p>
+
+<h2 id="recipes">SQL レシピ集</h2>
+<p>すべてこのリポジトリのデータセットでそのまま動きます。期間は「直近7日」にしてあります。<code>BETWEEN</code> の日付指定には当日分の <code>events_intraday_</code> テーブルは入りません（<code>_TABLE_SUFFIX</code> が <code>intraday_2026…</code> という文字列になるため）。</p>
+
+<h3>1. 届いているパラメータを全部洗い出す</h3>
+<p>何がどの型で届いているかを最初に確認します。カスタムディメンションの登録漏れもこれで分かります。</p>
+<pre data-lang="sql"><code>SELECT
+  event_name,
+  p.key,
+  COUNT(*) AS cnt,
+  COUNTIF(p.value.string_value IS NOT NULL) AS as_string,
+  COUNTIF(p.value.int_value IS NOT NULL) AS as_int,
+  COUNTIF(p.value.double_value IS NOT NULL) AS as_double
+FROM `big-query-sample-492309.analytics_324810718.events_*`,
+  UNNEST(event_params) AS p
+WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE('Asia/Tokyo'), INTERVAL 7 DAY))
+                        AND FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))
+GROUP BY event_name, p.key
+ORDER BY event_name, cnt DESC;</code></pre>
+<label class="check"><input type="checkbox" id="rc-keys"> パラメータの一覧を出し、button_name や price の型を確認した</label>
+
+<h3>2. 取り出し用の一時関数を作る</h3>
+<p>毎回サブクエリを書くのが面倒なら、クエリの先頭で一時関数を定義します。</p>
+<pre data-lang="sql"><code>CREATE TEMP FUNCTION param_str(params ANY TYPE, k STRING) AS (
+  (SELECT value.string_value FROM UNNEST(params) WHERE key = k)
+);
+CREATE TEMP FUNCTION param_int(params ANY TYPE, k STRING) AS (
+  (SELECT value.int_value FROM UNNEST(params) WHERE key = k)
+);
+<span class="c">-- 型が分からない値を文字列でまとめて取る</span>
+CREATE TEMP FUNCTION param_any(params ANY TYPE, k STRING) AS (
+  (SELECT COALESCE(value.string_value, CAST(value.int_value AS STRING),
+                   CAST(value.double_value AS STRING), CAST(value.float_value AS STRING))
+   FROM UNNEST(params) WHERE key = k)
+);
+
+SELECT
+  param_str(event_params, 'button_name') AS button_name,
+  param_str(event_params, 'section') AS section,
+  param_str(user_properties, 'plan') AS plan,
+  COUNT(*) AS clicks
+FROM `big-query-sample-492309.analytics_324810718.events_*`
+WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE('Asia/Tokyo'), INTERVAL 7 DAY))
+                        AND FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))
+  AND event_name = 'button_click'
+GROUP BY button_name, section, plan
+ORDER BY clicks DESC;</code></pre>
+<p>02章で探索に作った「ボタン名 × プラン」の表と同じものが、登録なしで作れます。</p>
+<label class="check"><input type="checkbox" id="rc-func"> 一時関数でボタン名 × プランの表を出した</label>
+
+<h3>3. ユーザープロパティ別のユーザー数</h3>
+<pre data-lang="sql"><code>SELECT
+  (SELECT value.string_value FROM UNNEST(user_properties) WHERE key = 'plan') AS plan,
+  (SELECT value.string_value FROM UNNEST(user_properties) WHERE key = 'user_type') AS user_type,
+  COUNT(DISTINCT user_pseudo_id) AS users,
+  COUNT(*) AS events
+FROM `big-query-sample-492309.analytics_324810718.events_*`
+WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE('Asia/Tokyo'), INTERVAL 7 DAY))
+                        AND FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))
+GROUP BY plan, user_type
+ORDER BY users DESC;</code></pre>
+
+<h3>4. 日別のユーザー数・セッション数・PV</h3>
+<p>セッションは <code>user_pseudo_id</code> と <code>ga_session_id</code> の組み合わせで1つと数えます。</p>
+<pre data-lang="sql"><code>SELECT
+  PARSE_DATE('%Y%m%d', event_date) AS day,
+  COUNT(DISTINCT user_pseudo_id) AS users,
+  COUNT(DISTINCT CONCAT(user_pseudo_id, '-', CAST(
+    (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id') AS STRING
+  ))) AS sessions,
+  COUNTIF(event_name = 'page_view') AS page_views
+FROM `big-query-sample-492309.analytics_324810718.events_*`
+WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE('Asia/Tokyo'), INTERVAL 7 DAY))
+                        AND FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))
+GROUP BY day
+ORDER BY day;</code></pre>
+<label class="check"><input type="checkbox" id="rc-sessions"> 日別のセッション数を出し、GA4 画面の値と見比べた</label>
+
+<h3>5. 1人のユーザーの行動履歴（日本時間）</h3>
+<p>GA4 のユーザーエクスプローラと同じことを、しきい値や <code>(other)</code> の影響なしで行えます。</p>
+<pre data-lang="sql"><code>SELECT
+  DATETIME(TIMESTAMP_MICROS(event_timestamp), 'Asia/Tokyo') AS jst,
+  event_name,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_title') AS page_title,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'button_name') AS button_name,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'item_name') AS item_name
+FROM `big-query-sample-492309.analytics_324810718.events_*`
+WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE('Asia/Tokyo'), INTERVAL 7 DAY))
+                        AND FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))
+  AND user_id = '22222222-bbbb-4bbb-8bbb-222222222222'
+ORDER BY event_timestamp;</code></pre>
+<label class="check"><input type="checkbox" id="rc-user"> パターンBのユーザーの行動を時系列で出した</label>
+
+<h3>6. ファネル（商品を見た → カートに入れた → 購入した）</h3>
+<p>ユーザーごとに各ステップの最初の時刻を取り、順番どおりに進んだ人を数えます。</p>
+<pre data-lang="sql"><code>WITH steps AS (
+  SELECT
+    user_pseudo_id,
+    MIN(IF(event_name = 'view_item', event_timestamp, NULL)) AS t_view,
+    MIN(IF(event_name = 'add_to_cart', event_timestamp, NULL)) AS t_cart,
+    MIN(IF(event_name = 'purchase', event_timestamp, NULL)) AS t_purchase
+  FROM `big-query-sample-492309.analytics_324810718.events_*`
+  WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE('Asia/Tokyo'), INTERVAL 7 DAY))
+                          AND FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))
+  GROUP BY user_pseudo_id
+)
+SELECT
+  COUNTIF(t_view IS NOT NULL) AS step1_view_item,
+  COUNTIF(t_cart > t_view) AS step2_add_to_cart,
+  COUNTIF(t_purchase > t_cart AND t_cart > t_view) AS step3_purchase
+FROM steps;</code></pre>
+<p>比較の片方が <code>NULL</code> だと結果も <code>NULL</code> になり、<code>COUNTIF</code> では数えられません。そのため「前のステップを踏んでいない人」は自然に除外されます。</p>
+<label class="check"><input type="checkbox" id="rc-funnel"> テストサイトで3ステップを順に押し、翌日ファネルに反映されたのを確認した</label>
+
+<h3>7. gtag.js と GTM の比較</h3>
+<p>04章で GTM の Google タグに <code>tag_source = gtm</code> を付けたので、どちらから来たデータかを見分けられます。</p>
+<pre data-lang="sql"><code>SELECT
+  IFNULL((SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'tag_source'),
+         'gtag.js（index.html）') AS source,
+  event_name,
+  COUNT(*) AS events
+FROM `big-query-sample-492309.analytics_324810718.events_*`
+WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE('Asia/Tokyo'), INTERVAL 7 DAY))
+                        AND FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))
+GROUP BY source, event_name
+ORDER BY source, events DESC;</code></pre>
+<label class="check"><input type="checkbox" id="rc-source"> tag_source ごとのイベント数を出した</label>
+
+<h3>8. e コマースの items を展開する</h3>
+<p>gtm.html の「カートに追加」は <code>items</code> 配列付きで送っています。index.html の <code>add_to_cart</code> は <code>item_name</code> をただのイベントパラメータで送っているので、<code>items</code> は空です。</p>
+<pre data-lang="sql"><code>SELECT
+  event_name,
+  item.item_id,
+  item.item_name,
+  item.price,
+  item.quantity
+FROM `big-query-sample-492309.analytics_324810718.events_*`,
+  UNNEST(items) AS item
+WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE('Asia/Tokyo'), INTERVAL 7 DAY))
+                        AND FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))
+  AND event_name = 'add_to_cart';</code></pre>
+
+<h3>9. 今日のデータを見る（ストリーミング有効時）</h3>
+<pre data-lang="sql"><code>SELECT event_name, COUNT(*) AS cnt
+FROM `big-query-sample-492309.analytics_324810718.events_intraday_*`
+WHERE _TABLE_SUFFIX = FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))
+GROUP BY event_name
+ORDER BY cnt DESC;</code></pre>
+<p>日次テーブルと当日分を一緒に見たいときは、<code>events_*</code> と <code>events_intraday_*</code> を <code>UNION ALL</code> します。<code>events_*</code> だけで <code>_TABLE_SUFFIX</code> を絞らずに書くと、日次と当日分が両方入って二重に数えることがあります。</p>
+
+<h2 id="ops">運用: ビューと定期実行</h2>
+<h3>平らにしたビューを作る</h3>
+<p>よく使う列を取り出したビューを作っておくと、Looker Studio やほかの人のクエリが簡単になります。</p>
+<pre data-lang="sql"><code>CREATE OR REPLACE VIEW `big-query-sample-492309.tutorial.events_flat` AS
+SELECT
+  _TABLE_SUFFIX AS table_suffix,
+  PARSE_DATE('%Y%m%d', event_date) AS event_date,
+  DATETIME(TIMESTAMP_MICROS(event_timestamp), 'Asia/Tokyo') AS event_datetime_jst,
+  event_name,
+  user_pseudo_id,
+  user_id,
+  (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id') AS ga_session_id,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_location') AS page_location,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'button_name') AS button_name,
+  (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'tag_source') AS tag_source,
+  (SELECT value.string_value FROM UNNEST(user_properties) WHERE key = 'plan') AS plan,
+  device.category AS device_category,
+  geo.city AS city
+FROM `big-query-sample-492309.analytics_324810718.events_*`;</code></pre>
+<p>ビューは中身を保存しないので、使うたびに元のテーブルを読みます。使う側でも <code>table_suffix</code> で期間を絞り、ドライランで処理量を確かめます。データセット <code>tutorial</code> は GA4 のデータセットと同じリージョンに作ります（05章）。</p>
+<label class="check"><input type="checkbox" id="ops-view"> events_flat ビューを作った</label>
+
+<h3>定期実行（スケジュールされたクエリ）</h3>
+<p>エディタの「スケジュール」から、毎朝前日分を集計して別テーブルに追記する、といった処理を登録できます。集計済みテーブルを Looker Studio から読むようにすると、表示が速くなり、スキャン量も減ります。</p>
+
+<h3>止めるときは</h3>
+<p>学習が終わったら、<span class="ui-path"><span>管理</span><span>サービス間のリンク設定</span><span>BigQuery のリンク</span></span> からストリーミングをオフにします。日次エクスポートは無料なので残して構いません。</p>
+<nav class="pager" aria-label="前後の章">
+<a class="prev" href="bigquery-basics.html"><small>← 前の章 05</small>BigQueryの基礎</a>
+<a class="next" href="visualize.html"><small>次の章 07 →</small>可視化とAPI</a>
+</nav>
+</div>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

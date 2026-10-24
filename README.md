@@ -1,7 +1,28 @@
 # BigQuery × GA4 サンドボックス
 
-BigQueryとGA4を学習するために作ったリポジトリ。
-テストサイトにGA4タグを埋め込み、BigQueryにデータを流し込んで分析・可視化するまでの一連の流れを実践した。
+GA4・GTM・BigQuery を包括的に学ぶためのリポジトリ。
+テストサイトに計測を仕込み、GA4 の画面で見て、GTM で計測を管理し、BigQuery に流し込んで SQL で分析・可視化するまでを、手を動かしながら一通り学べるようにしている。
+
+## 📚 学習ガイド
+
+学習ガイド（HTML）: https://syamozipc.github.io/BigQuery_GA4_sandbox/docs/
+<br />
+ローカルで読む場合は [docs/index.html](docs/index.html) を開く（`python3 -m http.server 8000` → http://localhost:8000/docs/）。
+
+上から順に進めるのがおすすめ。**基礎** は仕組みの理解、**ハンズオン** はテストサイトと各管理画面を実際に操作する章。
+
+| 章 | 種類 | 内容 |
+| --- | --- | --- |
+| [00 全体像とロードマップ](docs/index.html) | — | データの流れの全体図、リポジトリ構成、GCP/GA4 のリソース情報、用語集 |
+| [01 GA4の基礎](docs/ga4-basics.html) | 基礎 | イベント・パラメータ・ユーザープロパティ、スコープ、user_id / user_properties、gtag.js の導入、画面の見取り図、上限値 |
+| [02 カスタムディメンションを画面で見る](docs/ga4-custom-dimensions.html) | ハンズオン | 実装したパラメータをカスタム定義に登録し、リアルタイム・探索・標準レポートで見る。キーイベント |
+| [03 GTMの基礎](docs/gtm-basics.html) | 基礎 | タグ・トリガー・変数、dataLayer の仕組み、「dataLayer.push 方式」と「クラス名・data属性で拾う方式」の違い |
+| [04 GTMを実際に使う](docs/gtm-tutorial.html) | ハンズオン | [gtm.html](gtm.html) で両方式を設定し、クラス名変更で壊れ方を比べ、公開まで行う |
+| [05 BigQueryの基礎](docs/bigquery-basics.html) | 基礎 | 列指向・料金・リソース階層、基本操作（挿入・クエリ・インポート/エクスポート）、BigQuery 特有の SQL |
+| [06 GA4データをBigQueryへ](docs/bigquery-export.html) | ハンズオン | エクスポート設定、テーブル構造、UNNEST、SQL レシピ集（パラメータ・ユーザー・セッション・ファネル・GTM比較） |
+| [07 可視化とAPI](docs/visualize.html) | ハンズオン | Looker Studio、dashboard.html（BigQuery API）、realtime.html（GA4 Data API）の仕組みと使い分け |
+
+ハンズオンの章にはチェック項目があり、進捗はブラウザに保存されて 00 章のカードに表示される。
 
 ---
 
@@ -9,273 +30,61 @@ BigQueryとGA4を学習するために作ったリポジトリ。
 
 ```
 /
-├── index.html        # GA4タグ入りのテストサイト（仮ユーザーIDの切り替え付き）
-├── dashboard.html    # BigQueryデータを表示するダッシュボード（翌日以降）
-└── realtime.html     # GA4 Data APIで過去30分をユーザー単位で表示
+├── index.html        # テストサイト（gtag.js 直書き。仮ユーザーIDの切り替え付き）
+├── gtm.html          # GTM 練習用ページ（gtag.js なし。GTM コンテナIDを画面で設定）
+├── dashboard.html    # BigQuery のデータを表示するダッシュボード（翌日以降）
+├── realtime.html     # GA4 Data API で過去30分をユーザー単位で表示
+└── docs/             # 学習ガイド（00〜07章）
+    └── assets/       # ガイド共通の CSS / JS
 ```
 
-**テストサイト**: https://syamozipc.github.io/BigQuery_GA4_sandbox/
-<br />
-**ダッシュボード**: https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html
-<br />
-**リアルタイムダッシュボード**: https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html
-<br />
-**Looker Studio**: https://lookerstudio.google.com/reporting/3c89940d-f869-47be-a135-97fee528fcda/page/j5EuF
-<br />
-Big Query: https://console.cloud.google.com/bigquery?project=big-query-sample-492309
-<br />
-Google Analytics: https://analytics.google.com/analytics/web/#/a235761773p324810718/reports/intelligenthome?params=_u..nav%3Dmaui
+| ページ | URL |
+| --- | --- |
+| テストサイト | https://syamozipc.github.io/BigQuery_GA4_sandbox/ |
+| GTM 練習ページ | https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html |
+| ダッシュボード | https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html |
+| リアルタイムダッシュボード | https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html |
+| Looker Studio | https://lookerstudio.google.com/reporting/3c89940d-f869-47be-a135-97fee528fcda/page/j5EuF |
+| BigQuery | https://console.cloud.google.com/bigquery?project=big-query-sample-492309 |
+| Google Analytics | https://analytics.google.com/analytics/web/#/a235761773p324810718/reports/intelligenthome?params=_u..nav%3Dmaui |
+
+### gtm.html の使い方
+
+GTM のコンテナIDは次のどれかで指定する（上から優先）。
+
+1. URL に `?gtm=GTM-XXXXXXX` を付ける
+2. 画面の「GTM コンテナ」欄に入れて保存する（ブラウザの localStorage に保存）
+3. `gtm.html` 内の `DEFAULT_GTM_ID` に書く
+
+右側に dataLayer の中身がリアルタイムで表示されるので、ボタンを押したときに何が積まれるかを見ながら GTM を設定できる。
 
 ---
 
-## 学んだこと
+## これまでの学びの要点
 
-### 1. BigQueryの基本概念
+詳しくは各章に書いてある。旧 README の各節は次の章に移した。
 
-BigQueryはGoogleのフルマネージド型サーバーレスデータウェアハウス。従来のRDBMSとは根本的に異なる設計思想を持つ。
+| 旧 README の節 | 移動先 |
+| --- | --- |
+| 1. BigQuery の基本概念 / 2. 基本操作 | [05 BigQueryの基礎](docs/bigquery-basics.html) |
+| 3. GA4 タグの導入 | [01 GA4の基礎](docs/ga4-basics.html#implement) |
+| 4. GitHub Pages へのデプロイ | [00 全体像](docs/index.html#repo) |
+| 5. GA4 と BigQuery の連携 | [06 GA4データをBigQueryへ](docs/bigquery-export.html) |
+| 6. JS ダッシュボード / 7. Looker Studio / 10. GA4 Data API | [07 可視化とAPI](docs/visualize.html) |
+| 8. ユーザー単位の計測（User-ID / user_properties） | [01 GA4の基礎](docs/ga4-basics.html#userid) |
+| 9. GA4 管理画面でのユーザー別絞り込み | [02 カスタムディメンションを画面で見る](docs/ga4-custom-dimensions.html#realtime) |
 
-**列指向ストレージ**: MySQLなどの行指向DBと異なり、列単位でデータを格納する。`SELECT name FROM users` のようなクエリでは `name` 列だけが読み込まれ、他の列は触らない。これが数十億行でも高速に分析できる理由。
-
-**ストレージとコンピュートの分離**: データの保存と処理が独立しているため、データが増えてもクエリ性能は落ちない。
-
-**料金モデル**: クエリが**スキャンしたデータ量**に応じて課金される（$6.25/TB）。毎月1TBまで無料。`SELECT *` は全列をスキャンするのでコストが高くなる。必要な列だけ指定するのが鉄則。
-
-**リソース階層**: `GCPプロジェクト > データセット > テーブル > カラム` の順。テーブルの参照は `` `プロジェクトID.データセット名.テーブル名` `` の形式。
-
----
-
-### 2. BigQueryの基本操作
-
-#### データ挿入
-
-小規模なら `INSERT INTO` でSQLから直接挿入できる。本番では大量データに向かないため、GCSからのバッチロードやStorage Write APIを使う。
-
-```sql
-INSERT INTO `tutorial.employees` (employee_id, name, department, salary)
-VALUES (1, '田中太郎', 'エンジニアリング', 6000000);
-```
-
-#### クエリ実行
-
-ワイルドカード `events_*` で複数テーブルをまとめてクエリできる。`_TABLE_SUFFIX` で日付範囲を絞るとスキャン量が減ってコスト節約になる。
-
-```sql
-SELECT event_name, COUNT(*) AS cnt
-FROM `project.dataset.events_*`
-WHERE _TABLE_SUFFIX BETWEEN '20260301' AND '20260401'
-GROUP BY event_name
-ORDER BY cnt DESC;
-```
-
-#### エクスポート
-
-- **コンソールから**: クエリ結果の「結果を保存」→ CSVダウンロード（1GB以下）
-- **SQLで**: `EXPORT DATA OPTIONS (uri = 'gs://...') AS (SELECT ...)`
-- **bqコマンドで**: `bq extract --destination_format CSV dataset.table gs://...`
-
-#### インポート
-
-- **コンソールから**: データセット → 「テーブルを作成」→ アップロード（10MB以下）
-- **SQLで**: `LOAD DATA INTO dataset.table FROM FILES (format='CSV', uris=[...])`
-- **bqコマンドで**: `bq load --source_format=CSV --autodetect dataset.table ./file.csv`
+- **送ることと登録することは別作業**。送ったパラメータは GA4 に届くが、画面で使うにはカスタム定義への登録が必要。ただし `method` など既定ディメンションと同じ名前のパラメータは登録なしで見える。BigQuery には登録なしで全部入る。
+- **user_id と user_properties は役割が違う**。user_id はユーザーエクスプローラ用、絞り込みには user_properties をユーザースコープで登録して使う。
+- **ID を途中で切り替えるとき**は `gtag('config')` に `send_page_view: false` を付けて重複 PV を防ぐ。
+- **debug_mode は実測では DebugView に出なかった**。DebugView は Tag Assistant で接続して使う。
+- **GTM は成果系を dataLayer、UI クリックを data属性** で計測すると壊れにくい。クラス名で拾う方式はデザイン改修で黙って止まる。
+- **BigQuery は UNNEST が肝**。`(SELECT value.string_value FROM UNNEST(event_params) WHERE key = '…')` の形で列にする。
+- **GA4 画面と BigQuery の数字は完全には合わない**（推定値・しきい値・タイムゾーン）。正確なユーザー単位の履歴は BigQuery が正。
 
 ---
 
-### 3. GA4タグの導入
-
-GA4（Google Analytics 4）のタグをWebサイトに埋め込んで計測を有効にする。
-
-**gtag.js方式**: すべてのページの `<head>` に以下を追加。
-
-```html
-<script
-  async
-  src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"
-></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag() {
-    dataLayer.push(arguments);
-  }
-  gtag("js", new Date());
-  gtag("config", "G-XXXXXXXXXX");
-</script>
-```
-
-**カスタムイベントの送信**: `gtag('event', イベント名, パラメータ)` で任意のイベントを送信できる。
-
-```javascript
-gtag("event", "button_click", { button_name: "購入ボタン" });
-```
-
-GA4が自動計測するイベント: `page_view` / `session_start` / `first_visit` / `scroll` など。
-
----
-
-### 4. GitHub Pagesへのデプロイ
-
-GitHubリポジトリに `index.html` を置き、Settings → Pages → Deploy from a branch（main / root）を設定するだけで `https://ユーザー名.github.io/リポジトリ名/` として公開できる。
-<br />
-コードをpushするたびに自動デプロイされる。
-
----
-
-### 5. GA4とBigQueryの連携
-
-GA4管理画面 → 管理 → プロダクトのリンク設定 → BigQueryのリンク から設定する。
-
-GCPプロジェクトを指定するとGA4が自動で `analytics_<プロパティID>` データセットを作成し、以下のテーブルを生成する。
-
-| テーブル                   | 内容                                        |
-| -------------------------- | ------------------------------------------- |
-| `events_YYYYMMDD`          | 日次エクスポート（前日分が翌日届く・無料）  |
-| `events_intraday_YYYYMMDD` | ストリーミング（数分で届く・有料 $0.05/GB） |
-
-**GA4データの特徴的な構造**: `event_params` がネスト型（ARRAY of STRUCT）なので、値を取り出すには `UNNEST` が必要。
-
-```sql
-SELECT
-  ep.value.string_value AS page_location,
-  COUNT(*) AS pageviews
-FROM `project.analytics_xxx.events_*`,
-  UNNEST(event_params) AS ep
-WHERE event_name = 'page_view'
-  AND ep.key = 'page_location'
-GROUP BY page_location;
-```
-
-**セッション数のカウント**: `user_pseudo_id` と `ga_session_id` の組み合わせが1セッション。
-
-```sql
-COUNT(DISTINCT CONCAT(user_pseudo_id,
-  CAST((SELECT ep.value.int_value FROM UNNEST(event_params) ep WHERE ep.key = 'ga_session_id') AS STRING)
-)) AS sessions
-```
-
----
-
-### 6. JSダッシュボード（dashboard.html）
-
-Google Identity Services（GIS）でOAuth2認証を行い、BigQuery REST APIに直接クエリを投げてデータを取得・グラフ表示する。
-
-**認証フロー**: Google Sign-Inでログイン → IDトークン取得 → アクセストークンをBigQuery API呼び出しに使用。
-
-**BigQuery REST API**:
-
-```javascript
-const res = await fetch(
-  `https://bigquery.googleapis.com/bigquery/v2/projects/${PROJECT_ID}/queries`,
-  {
-    method: "POST",
-    headers: { Authorization: "Bearer " + accessToken },
-    body: JSON.stringify({ query: sql, useLegacySql: false }),
-  },
-);
-```
-
----
-
-### 7. Looker Studio
-
-Googleが提供する無料のBIツール。BigQueryと直接繋がり、SQLの知識がなくてもグラフや表を作れる。
-
-**接続方法**: Looker Studio → 作成 → レポート → データソースに「BigQuery」を選択 → プロジェクト・データセット・テーブルを指定。
-
-**特徴**:
-
-- ドラッグ＆ドロップでグラフを追加できる
-- BigQueryのデータが更新されるとレポートにも反映される
-- URLで共有でき、Googleアカウントでアクセス制御が可能
-- 社内ダッシュボードとして使うには十分な機能を無料で使える
-
----
-
-### 8. ユーザー単位の計測（User-ID / user_properties）
-
-ユーザーごとにデータを見たい場合、UUIDなどの自前IDを2通りの形でGA4に送る。値は同じでも役割と使える場所が違う。
-
-| | `user_id` | `user_properties` |
-|---|---|---|
-| 正体 | GA4の予約識別子 | 自作のユーザースコープ属性 |
-| 設定作業 | 管理 → レポートID で有効化 | 管理 → カスタム定義 に登録 |
-| レポートで絞り込み | **できない** | できる（比較・セグメント） |
-| ユーザーエクスプローラ | **できる**（行がUser-IDになる） | — |
-| BigQuery | `user_id` 列 | `user_properties` 列（ARRAY of STRUCT） |
-
-```javascript
-// user_properties は値が36文字までなのでUUIDがちょうど収まる
-gtag("set", "user_properties", {
-  app_user_id: uuid,
-  plan: "pro",
-  user_type: "returning",
-});
-gtag("config", "G-XXXXXXXXXX", { user_id: uuid });
-```
-
-**IDを途中で切り替える場合**: `gtag('config')` を再実行するが、そのままだと `page_view` が重複送信されるので `send_page_view: false` を付ける。
-
-**debug_mode の注意**: 公式ドキュメントには `gtag('config', ID, {debug_mode: true})` で DebugView に出ると書かれているが、実測すると現在の gtag.js は `_dbg=1` ではなく `ep.debug_mode=true`（ただのイベントパラメータ）として送るだけで、DebugViewには現れなかった。DebugViewを使いたい場合は [Tag Assistant](https://tagassistant.google.com) で接続するか、Chrome拡張の Google Analytics Debugger を使う。
-
----
-
-### 9. GA4管理画面でのユーザー別絞り込み
-
-**準備**: 管理 → データの表示 → **カスタム定義** → カスタムディメンションを作成（範囲=ユーザー、ユーザープロパティ名を指定）。あわせて 管理 → **レポート ID**（旧「レポート用識別子」）で User-ID を優先させる。
-
-| 見たいもの | 場所 | 反映 |
-|---|---|---|
-| ユーザープロパティ別の即時集計 | リアルタイムの概要 → 「アクティブユーザー: **ユーザープロパティ別**」カード | 数秒 |
-| 絞り込んだ数値 | リアルタイム → 「比較を追加」 → 新規作成 | 数秒 |
-| ユーザー個別のイベント履歴 | 探索 → **ユーザーエクスプローラ** | 数時間 |
-| 通常レポートでの集計 | レポート → エンゲージメント → イベント | 最大24〜48時間 |
-
-カスタムディメンションは登録後に収集されたデータのみが対象。ただし**リアルタイムには即反映**され、「最大48時間」がかかるのは通常レポートと探索の方。
-
-GA4 UIのリアルタイムは過去30分固定・カード固定で、任意のディメンション×指標の組み合わせやセグメントは使えない。
-
----
-
-### 10. GA4 Data APIでリアルタイム分析（realtime.html）
-
-GA4 UIの制約を超えて自由に分析したい場合、Data APIの `runRealtimeReport` を直接叩けば過去30分のデータを任意のディメンション×指標で取得できる。無料。
-
-**準備**: GCPで Google Analytics Data API を有効化し、OAuth同意画面に `analytics.readonly` スコープを追加する。
-
-```javascript
-// ユーザースコープのカスタムディメンションは customUser: プレフィックスで参照する
-const res = await fetch(
-  `https://analyticsdata.googleapis.com/v1beta/properties/${PROPERTY_ID}:runRealtimeReport`,
-  {
-    method: "POST",
-    headers: { Authorization: "Bearer " + accessToken },
-    body: JSON.stringify({
-      dimensions: [{ name: "customUser:app_user_id" }],
-      metrics: [{ name: "activeUsers" }, { name: "eventCount" }],
-      dimensionFilter: {
-        filter: {
-          fieldName: "customUser:app_user_id",
-          stringFilter: { matchType: "EXACT", value: uuid },
-        },
-      },
-    }),
-  },
-);
-```
-
-`minutesAgo` ディメンション（"0"〜"29"）を使うと分単位の推移が取れる。
-
-**ユーザー単位で使う場合の制約**:
-
-- **しきい値**: Googleシグナル有効時、少人数のデータはプライバシー保護で非表示になる
-- **(other) 丸め**: UUIDのようなカーディナリティの高いディメンションは行数上限を超えると `(other)` に集約される
-- **クォータ**: 標準プロパティは1日あたりのトークン上限あり。短間隔ポーリングは要注意
-- **認証**: ブラウザ直叩きはログインした人の権限になる。誰でも見る画面ならサーバー側でサービスアカウントを使う
-
-集計・傾向を見るならAPIで十分だが、特定ユーザーの行動履歴を業務画面に正確に出したいなら、しきい値と `(other)` 丸めで欠損するので BigQueryエクスポートか自社DBの方が確実。
-
----
-
-## GCPリソース情報
+## GCP リソース情報
 
 | 項目             | 値                        |
 | ---------------- | ------------------------- |
@@ -292,6 +101,6 @@ const res = await fetch(
 継続して使わない場合は以下を対応する。
 
 - [ ] ストリーミングエクスポートをオフにする（有料のため）
-- [ ] GCPプロジェクトの課金を確認する
+- [ ] GCP プロジェクトの課金を確認する
 
-GitHub Pages・BigQuery日次エクスポート・Looker Studioは無料なのでそのままでOK。
+GitHub Pages・BigQuery 日次エクスポート・Looker Studio は無料なのでそのままで OK。

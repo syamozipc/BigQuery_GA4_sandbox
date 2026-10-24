@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>03 GTMの基礎 | GA4・GTM・BigQuery 学習ガイド</title>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" />
+<link rel="stylesheet" href="assets/guide.css" />
+</head>
+<body>
+<div class="shell" data-page-id="gtm-basics">
+<aside class="side">
+<a class="brand" href="index.html">GA4・GTM・BigQuery<small>学習ガイド</small></a>
+<nav class="chapters" aria-label="章">
+<a data-page="index" href="index.html"><span class="no">00</span><span>全体像とロードマップ</span></a>
+<p class="group">GA4</p>
+<a data-page="ga4-basics" href="ga4-basics.html"><span class="no">01</span><span>GA4の基礎</span></a>
+<a data-page="ga4-custom-dimensions" href="ga4-custom-dimensions.html"><span class="no">02</span><span>カスタムディメンションを画面で見る</span></a>
+<p class="group">GTM</p>
+<a data-page="gtm-basics" href="gtm-basics.html"><span class="no">03</span><span>GTMの基礎</span></a>
+<a data-page="gtm-tutorial" href="gtm-tutorial.html"><span class="no">04</span><span>GTMを実際に使う</span></a>
+<p class="group">BigQuery</p>
+<a data-page="bigquery-basics" href="bigquery-basics.html"><span class="no">05</span><span>BigQueryの基礎</span></a>
+<a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
+<a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
+</nav>
+<div class="side-links"><p>練習用のページ</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム</a></div>
+</aside>
+<main>
+<div class="content">
+<div class="kicker"><span class="chip">03</span><span class="chip kind-basic">基礎</span><span class="chip t-gtm">GTM</span></div>
+<h1>GTMの基礎</h1>
+<p class="lead">Google タグマネージャー（GTM）は、計測のコードをページに書く代わりに、管理画面で設定できるようにするツールです。この章では、すでに知っている index.html の gtag コードと対応づけながら仕組みを理解します。</p>
+
+<div class="toc"><p>この章の内容</p><ol>
+<li><a href="#what">GTMで何が変わるか</a></li>
+<li><a href="#parts">タグ・トリガー・変数</a></li>
+<li><a href="#mapping">index.html のコードとの対応</a></li>
+<li><a href="#datalayer">dataLayer の仕組み</a></li>
+<li><a href="#approach">2つの計測アプローチ</a></li>
+<li><a href="#publish">編集から公開までの流れ</a></li>
+<li><a href="#pitfalls">よくある落とし穴</a></li>
+<li><a href="#check">確認テスト</a></li>
+<li><a href="#reference">リファレンス</a></li>
+</ol></div>
+
+<h2 id="what">GTMで何が変わるか</h2>
+<p>ページに入れるのは、GTM のコンテナ（<code>GTM-XXXXXXX</code>）を読み込むスニペット1つだけです。「何を・いつ送るか」の設定はすべて GTM の画面で作り、「公開」を押すとサイトに反映されます。</p>
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>gtag.js 直書き（index.html）</th><th>GTM（gtm.html）</th></tr></thead>
+<tbody>
+<tr><td>計測を足す・直す</td><td>コードを修正してデプロイ</td><td>GTM の画面で設定して公開</td></tr>
+<tr><td>動作の確認</td><td>DebugView、開発者ツール</td><td>プレビューで、どのタグが動いたかまで見える</td></tr>
+<tr><td>元に戻す</td><td>Git で戻してデプロイ</td><td>公開した版（バージョン）を選んで戻す</td></tr>
+</tbody></table></div>
+
+<h2 id="parts">タグ・トリガー・変数</h2>
+<p>GTM の設定は、すべて3つの部品の組み合わせです。「<strong>資料請求ボタンが押されたら、GA4 に cta_click を送る。ボタン名も付けて</strong>」という1つの指示を分解すると、こうなります。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>部品</th><th>指示のどこか</th><th>この例での中身</th></tr></thead>
+<tbody>
+<tr><td>トリガー</td><td>「〜されたら」</td><td>資料請求ボタンが押されたとき</td></tr>
+<tr><td>タグ</td><td>「〜を送る」</td><td>GA4 にイベント <code>cta_click</code> を送る</td></tr>
+<tr><td>変数</td><td>「〜も付けて」</td><td>押されたボタンの名前（資料請求）</td></tr>
+</tbody></table></div>
+<figure class="diagram">
+<svg viewBox="0 0 740 230" role="img" aria-label="トリガーの条件を満たすとタグが発火してGA4に送信する。変数はタグに値を渡す">
+<defs><marker id="ah3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="head"/></marker></defs>
+<rect class="box" x="20" y="30" width="200" height="76" rx="8"/>
+<text class="t" x="120" y="58" text-anchor="middle">トリガー</text>
+<text class="s" x="120" y="78" text-anchor="middle">いつ送るか</text>
+<text class="s" x="120" y="96" text-anchor="middle">資料請求ボタンが押された</text>
+<rect class="box-strong" x="300" y="30" width="200" height="76" rx="8"/>
+<text class="t" x="400" y="58" text-anchor="middle">タグ</text>
+<text class="s" x="400" y="78" text-anchor="middle">何を送るか</text>
+<text class="sm" x="400" y="96" text-anchor="middle">GA4 に cta_click</text>
+<rect class="box" x="600" y="38" width="120" height="60" rx="8"/>
+<text class="t" x="660" y="73" text-anchor="middle">GA4</text>
+<rect class="box-plain" x="300" y="150" width="200" height="66" rx="8"/>
+<text class="t" x="400" y="176" text-anchor="middle">変数</text>
+<text class="sm" x="400" y="198" text-anchor="middle">cta_name = 資料請求</text>
+<path class="edge-strong" d="M220 68 L298 68" marker-end="url(#ah3a)"/>
+<text class="el-strong" x="259" y="59" text-anchor="middle">発火</text>
+<path class="edge" d="M500 68 L598 68" marker-end="url(#ah3a)"/>
+<text class="el" x="549" y="59" text-anchor="middle">送信</text>
+<path class="edge-dash" d="M400 150 L400 108" marker-end="url(#ah3a)"/>
+<text class="el" x="408" y="134">値を渡す</text>
+</svg>
+<figcaption>トリガーの条件を満たしてタグが実行されることを「発火」と呼びます。1つのタグに複数のトリガーを付けたり、1つの変数を複数のタグで使い回したりできます。</figcaption>
+</figure>
+
+<h2 id="mapping">index.html のコードとの対応</h2>
+<p>GTM で GA4 を送る設定は、index.html の gtag コードを GTM の画面で作り直したものです。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>index.html のコード</th><th>役割</th><th>GTM での部品</th></tr></thead>
+<tbody>
+<tr><td><code>gtag("config", "G-FEHSK6QJLE")</code></td><td>最初に1回だけ実行する初期設定。<code>page_view</code> もこれが送る</td><td><strong>Google タグ</strong>（トリガーは Initialization - All Pages）</td></tr>
+<tr><td><code>gtag("event", "button_click", …)</code></td><td>出来事のたびに送る</td><td><strong>GA4 イベントタグ</strong></td></tr>
+<tr><td><code>onclick="…"</code></td><td>いつ送るか</td><td>トリガー</td></tr>
+<tr><td><code>{ button_name: "資料ダウンロード" }</code></td><td>付ける値</td><td>変数</td></tr>
+</tbody></table></div>
+<p>GA4 イベントタグは、同じ測定IDの Google タグの設定を引き継ぎます。Google タグに付けたパラメータは、全イベントに付きます。</p>
+<div class="callout warn"><span class="label">二重計測に注意</span>
+<p>index.html のように gtag.js を直書きしたページに、同じ測定IDの Google タグを入れた GTM も置くと、全イベントが2回送られます。このリポジトリでは index.html が gtag.js、gtm.html が GTM と、ページを分けています。</p></div>
+
+<h2 id="datalayer">dataLayer の仕組み</h2>
+<p><code>dataLayer</code> はページ内のただの JavaScript 配列です。GTM はこの配列の <code>push</code> を監視していて、オブジェクトが積まれるたびに中身を読み取ります。</p>
+<pre data-lang="javascript"><code><span class="c">// GTM スニペットより前に置く（なければ GTM が作る）</span>
+window.dataLayer = window.dataLayer || [];
+
+<span class="c">// event キーがあると「カスタムイベント」としてトリガーの判定が走る</span>
+dataLayer.push({
+  event: "cta_click",
+  cta_name: "資料請求",
+  cta_position: "hero",
+});
+
+<span class="c">// event キーがない push は値の更新だけ。トリガーは動かない</span>
+dataLayer.push({ user_plan: "pro" });</code></pre>
+<ul>
+<li><strong><code>event</code> キーが合図</strong>です。カスタムイベントトリガーはこの値で一致を判定します。</li>
+<li>GTM は push された値を<strong>内部の状態にマージ</strong>して持ち続けます。前の push の値が残るので、ECデータのように毎回変わるオブジェクトは、先に <code>{ ecommerce: null }</code> を push してリセットするのが定石です。</li>
+<li>gtag.js も同じ <code>dataLayer</code> を使います（<code>gtag()</code> は <code>arguments</code> を push する関数）。だから GTM と gtag.js は同じページで干渉しやすいのです。</li>
+</ul>
+<p>GTM 自身も、ページの読み込みやクリックのたびに <code>gtm.js</code> や <code>gtm.click</code> などのメッセージを積みます。一覧はページ末尾のリファレンスにあります。</p>
+
+<h2 id="approach">2つの計測アプローチ</h2>
+<p>「dataLayer に push する方法」と「スクリプトだけ置いて、GTM の画面からクラス名などで制御する方法」の2つがあります。実務ではこの2つに、両者の中間の「data属性」を加えた3段階で考えると整理しやすいです。</p>
+<figure class="diagram">
+<svg viewBox="0 0 960 290" role="img" aria-label="コードのpushとGTMの自動検知の両方がdataLayerに入り、トリガーが条件を判定してタグを発火し、GA4に送信する。変数はトリガーの条件とタグの値に使われる">
+<defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="head"/></marker></defs>
+<rect class="box" x="20" y="30" width="190" height="76" rx="8"/>
+<text class="t" x="115" y="58" text-anchor="middle">A: コードが push</text>
+<text class="sm" x="115" y="78" text-anchor="middle">push({event: …})</text>
+<text class="s" x="115" y="96" text-anchor="middle">意味をエンジニアが決める</text>
+<rect class="box" x="20" y="150" width="190" height="76" rx="8"/>
+<text class="t" x="115" y="178" text-anchor="middle">B: GTM が自動検知</text>
+<text class="sm" x="115" y="198" text-anchor="middle">gtm.click</text>
+<text class="s" x="115" y="216" text-anchor="middle">押された要素を記録</text>
+<rect class="box-strong" x="270" y="90" width="150" height="76" rx="8"/>
+<text class="t" x="345" y="118" text-anchor="middle">dataLayer</text>
+<text class="sm" x="345" y="138" text-anchor="middle">{event, …}</text>
+<text class="s" x="345" y="156" text-anchor="middle">時系列に積まれる</text>
+<rect class="box" x="480" y="90" width="150" height="76" rx="8"/>
+<text class="t" x="555" y="118" text-anchor="middle">トリガー</text>
+<text class="s" x="555" y="138" text-anchor="middle">条件に合えば発火</text>
+<text class="sm" x="555" y="156" text-anchor="middle">event = cta_click</text>
+<rect class="box" x="690" y="90" width="130" height="76" rx="8"/>
+<text class="t" x="755" y="118" text-anchor="middle">タグ</text>
+<text class="s" x="755" y="138" text-anchor="middle">GA4 イベント</text>
+<text class="sm" x="755" y="156" text-anchor="middle">cta_click</text>
+<rect class="box" x="860" y="98" width="80" height="60" rx="8"/>
+<text class="t" x="900" y="133" text-anchor="middle">GA4</text>
+<rect class="box-plain" x="480" y="220" width="400" height="56" rx="8"/>
+<text class="t" x="500" y="244">変数</text>
+<text class="sm" x="500" y="264">{{dlv - cta_name}}  {{Click Classes}}  {{Page URL}}</text>
+<path class="edge" d="M210 68 C240 68 240 118 268 118" marker-end="url(#ah3)"/>
+<path class="edge" d="M210 188 C240 188 240 138 268 138" marker-end="url(#ah3)"/>
+<path class="edge" d="M420 128 L478 128" marker-end="url(#ah3)"/>
+<text class="el" x="449" y="119" text-anchor="middle">毎回判定</text>
+<path class="edge-strong" d="M630 128 L688 128" marker-end="url(#ah3)"/>
+<text class="el-strong" x="659" y="119" text-anchor="middle">発火</text>
+<path class="edge" d="M820 128 L858 128" marker-end="url(#ah3)"/>
+<text class="el" x="839" y="119" text-anchor="middle">送信</text>
+<path class="edge-dash" d="M555 220 L555 168" marker-end="url(#ah3)"/>
+<text class="el" x="563" y="200">条件に使う</text>
+<path class="edge-dash" d="M755 220 L755 168" marker-end="url(#ah3)"/>
+<text class="el" x="763" y="200">値に使う</text>
+</svg>
+<figcaption>A と B の違いは「誰が dataLayer にメッセージを積むか」だけです。A はページのコードが意味のある名前で積み、B は GTM がクリックを自動で検知して <code>gtm.click</code> として積みます。その先のトリガー・タグ・変数の仕組みは同じです。</figcaption>
+</figure>
+
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>A: dataLayer.push</th><th>B: クラス名・ID・テキスト</th><th>B': data属性</th></tr></thead>
+<tbody>
+<tr><td>ページ側の作業</td><td>出来事ごとに push を書く</td><td>なし（既存のHTMLを使う）</td><td><code>data-track-name="…"</code> を足すだけ</td></tr>
+<tr><td>GTM 側の設定</td><td>カスタムイベント + データレイヤーの変数</td><td>クリックトリガー + 組み込み変数</td><td>クリックトリガー + 自動イベント変数</td></tr>
+<tr><td>渡せる情報</td><td>何でも（価格、商品配列、ログイン状態など画面にない値も）</td><td>画面に出ている情報だけ</td><td>HTML に書ける値</td></tr>
+<tr><td>デザイン改修への強さ</td><td>強い。見た目と無関係</td><td><strong>弱い</strong>。クラス名や文言の変更で止まる</td><td>比較的強い。属性を残せば動く</td></tr>
+<tr><td>非同期の結果</td><td>API 成功後など、確定した時点で送れる</td><td>押した瞬間しか分からない。失敗も数える</td><td>同左</td></tr>
+<tr><td>向いているもの</td><td>購入、会員登録、フォーム送信完了などの成果</td><td>試しに測りたいボタン、外部リンク、検証</td><td>UI 上のクリックを継続的に測る</td></tr>
+</tbody></table></div>
+
+<div class="callout key"><span class="label">使い分けの目安</span>
+<p><strong>お金や成果に関わるイベントは A</strong>（dataLayer）で、エンジニアとマーケ担当が「イベント名とパラメータの仕様書」を合意して実装します。<strong>UI のクリック計測は B'</strong>（data属性）にすると、改修で壊れにくく、GTM 側だけで足し引きできます。<strong>B</strong>（クラス名）は既存サイトにコードを触らず計測を足したいときの手段で、壊れやすいと割り切って使います。</p></div>
+
+<p>04章では、練習用ページ gtm.html で A・B・B' をすべて設定し、「クラス名を変えると B だけが止まる」ことを実際に確かめます。</p>
+
+<h2 id="publish">編集から公開までの流れ</h2>
+<ol class="steps">
+<li><h4>ワークスペースで編集</h4><p>タグ・トリガー・変数を作ります。この時点ではまだ本番に反映されていません。</p></li>
+<li><h4>プレビューで確認</h4><p>右上の「プレビュー」で Tag Assistant が開き、自分のブラウザだけに編集中の設定が適用されます。dataLayer の中身、各メッセージで発火したタグ・しなかったタグ、変数の値が見られます。</p></li>
+<li><h4>公開</h4><p>「公開」を押し、バージョン名と説明（何を変えたか）を書いて公開します。全訪問者に反映されます。</p></li>
+<li><h4>必要なら切り戻し</h4><p><span class="ui-path"><span>バージョン</span></span> から過去の版を選んで「公開」すれば元に戻ります。</p></li>
+</ol>
+
+<h2 id="pitfalls">よくある落とし穴</h2>
+<ul>
+<li><strong>二重計測</strong>: gtag.js 直書きと GTM の Google タグを同じ測定IDで併用すると、全イベントが2回送られます。</li>
+<li><strong>子要素のクリック</strong>: ボタンの中のアイコンや <code>&lt;span&gt;</code> を押すと、Click Element はその子要素になります。CSS セレクタは <code>.btn, .btn *</code> のように子孫も含めます。</li>
+<li><strong>フォームの妥当性チェック</strong>: ページ側で <code>preventDefault()</code> しているフォームは、フォーム送信トリガーの「妥当性をチェック」をオンにすると発火しません。</li>
+<li><strong>SPA</strong>: React などで URL だけ変わる画面遷移は、ページビュートリガーでは拾えません。履歴の変更トリガーか、遷移時の push で対応します。</li>
+<li><strong>公開し忘れ</strong>: プレビューで動いても、公開しなければ本番のユーザーには何も起きません。</li>
+<li><strong>同意（Consent）</strong>: EU 向けなどで同意バナーを出す場合は、同意モードの設定と「Consent Initialization」トリガーが関わります。このリポジトリでは扱いません。</li>
+</ul>
+
+<h2 id="check">確認テスト</h2>
+<label class="check"><input type="checkbox" id="q-parts"> 「タグ・トリガー・変数」をそれぞれ一言で説明できる。</label>
+<label class="check"><input type="checkbox" id="q-event-key"> <code>event</code> キーがある push とない push の違いを説明できる。</label>
+<label class="check"><input type="checkbox" id="q-approach"> 購入イベントを B（クラス名）で計測すると何が困るか、2つ挙げられる。</label>
+<label class="check"><input type="checkbox" id="q-child"> CSS セレクタに <code>.btn *</code> を足す理由を説明できる。</label>
+
+<h2 id="reference">リファレンス</h2>
+<p>一覧は必要になったときに開いてください。</p>
+<details class="more"><summary>トリガーの種類</summary>
+<div class="table-wrap"><table>
+<thead><tr><th>トリガー</th><th>使いどころ</th><th>条件の例</th></tr></thead>
+<tbody>
+<tr><td>初期化 - All Pages</td><td>Google タグなど、最初に1回だけ動かすもの</td><td>すべてのページ</td></tr>
+<tr><td>ページビュー / DOM Ready / ウィンドウの読み込み</td><td>ページ単位の処理</td><td>Page Path が <code>/thanks</code> を含む</td></tr>
+<tr><td>カスタム イベント</td><td><strong>方式A</strong>。コードが push したイベント</td><td>イベント名 <code>cta_click</code></td></tr>
+<tr><td>クリック - すべての要素</td><td><strong>方式B</strong>。ボタンや任意の要素</td><td>Click Element が CSS セレクタ <code>.js-track-click, .js-track-click *</code> に一致</td></tr>
+<tr><td>クリック - リンクのみ</td><td><code>&lt;a&gt;</code> のクリック</td><td>Click URL が <code>.pdf</code> で終わる</td></tr>
+<tr><td>フォームの送信</td><td><code>&lt;form&gt;</code> の送信</td><td>Form ID が <code>gtm-form</code> と等しい</td></tr>
+<tr><td>要素の表示</td><td>バナーなどが画面に入った</td><td>CSS セレクタ <code>#promo-banner</code>、1ページに1回</td></tr>
+<tr><td>スクロール距離</td><td>縦スクロールの割合</td><td>25, 50, 75, 90 %</td></tr>
+<tr><td>履歴の変更</td><td>SPA の画面遷移（URL だけ変わる）</td><td>—</td></tr>
+<tr><td>タイマー / JavaScript エラー / YouTube 動画</td><td>滞在時間、エラー監視、動画視聴</td><td>—</td></tr>
+</tbody></table></div>
+</details>
+<details class="more"><summary>変数の種類</summary>
+<h3>組み込み変数</h3>
+<p>GTM が用意している変数です。クリック系は既定で無効なので、<span class="ui-path"><span>変数</span><span>組み込み変数</span><span>設定</span></span> で有効にしてから使います。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>変数</th><th>中身</th></tr></thead>
+<tbody>
+<tr><td><code>{{Event}}</code></td><td>今処理している dataLayer メッセージの <code>event</code> の値</td></tr>
+<tr><td><code>{{Page URL}}</code> / <code>{{Page Path}}</code></td><td>今のページのURL / パス</td></tr>
+<tr><td><code>{{Click Element}}</code></td><td>クリックされた DOM 要素そのもの</td></tr>
+<tr><td><code>{{Click Classes}}</code> / <code>{{Click ID}}</code></td><td>クリックされた要素の class 属性 / id 属性</td></tr>
+<tr><td><code>{{Click Text}}</code></td><td>クリックされた要素のテキスト</td></tr>
+<tr><td><code>{{Click URL}}</code></td><td>クリックされたリンクの href</td></tr>
+<tr><td><code>{{Form ID}}</code> など</td><td>フォーム送信時の情報</td></tr>
+</tbody></table></div>
+<h3>ユーザー定義変数（よく使うもの）</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>種類</th><th>用途</th></tr></thead>
+<tbody>
+<tr><td>データレイヤーの変数</td><td><strong>方式A</strong>で、push された <code>cta_name</code> などを取り出す</td></tr>
+<tr><td>自動イベント変数</td><td><strong>方式B</strong>で、クリックされた要素の属性（<code>data-track-name</code> など）を取り出す</td></tr>
+<tr><td>カスタム JavaScript</td><td>関数を書いて値を作る。親要素をたどる処理など</td></tr>
+<tr><td>定数</td><td>測定ID <code>G-FEHSK6QJLE</code> を1か所で管理する</td></tr>
+<tr><td>Google タグ: イベント設定</td><td>全イベントに付ける共通パラメータをまとめる</td></tr>
+</tbody></table></div>
+<p>変数名は <code>dlv - cta_name</code>（データレイヤー）、<code>aev - track name</code>（自動イベント）のように種類の略号を頭に付けると、一覧で見分けやすくなります。</p>
+</details>
+<details class="more"><summary>GTM が自分で dataLayer に積むメッセージ</summary>
+<p>GTM は読み込み時やクリック時に、自分でも dataLayer にメッセージを積みます。プレビューモードの左側に並ぶのがこれです。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>dataLayer の event</th><th>プレビューでの表示</th><th>タイミング</th></tr></thead>
+<tbody>
+<tr><td><code>gtm.init_consent</code> / <code>gtm.init</code></td><td>Consent Initialization / Initialization</td><td>何よりも先。同意設定や Google タグ用</td></tr>
+<tr><td><code>gtm.js</code></td><td>Container Loaded</td><td>コンテナ読み込み直後（ページビュー）</td></tr>
+<tr><td><code>gtm.dom</code></td><td>DOM Ready</td><td>HTML の解析完了</td></tr>
+<tr><td><code>gtm.load</code></td><td>Window Loaded</td><td>画像なども含めて読み込み完了</td></tr>
+<tr><td><code>gtm.click</code> / <code>gtm.linkClick</code></td><td>Click</td><td>クリックトリガーがあるときだけ監視される</td></tr>
+<tr><td><code>gtm.formSubmit</code></td><td>Form Submit</td><td>フォーム送信トリガーがあるとき</td></tr>
+<tr><td><code>gtm.elementVisibility</code></td><td>Element Visibility</td><td>要素の表示トリガーがあるとき</td></tr>
+<tr><td><code>gtm.scrollDepth</code></td><td>Scroll Depth</td><td>スクロール距離トリガーがあるとき</td></tr>
+</tbody></table></div>
+<p>クリックなどの監視は、対応するトリガーが1つでもあるときだけ有効になります。「クリックしても dataLayer に <code>gtm.click</code> が出ない」ときは、まずクリックトリガーを作ってあるかを確認します。</p>
+</details>
+
+<nav class="pager" aria-label="前後の章">
+<a class="prev" href="ga4-custom-dimensions.html"><small>← 前の章 02</small>カスタムディメンションを画面で見る</a>
+<a class="next" href="gtm-tutorial.html"><small>次の章 04 →</small>GTMを実際に使う</a>
+</nav>
+</div>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

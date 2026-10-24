@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pkill -f \"http.server 8931\")",
+      "Bash(curl -s https://syamozipc.github.io/BigQuery_GA4_sandbox/)",
+      "Bash(curl -sI https://syamozipc.github.io/BigQuery_GA4_sandbox/)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --disable-gpu --user-data-dir=/private/tmp/claude-501/-Users-ryotasaito-workspace-BigQuery-GA4-sandbox/822ec87f-705b-4a3c-9e86-06a0bcc1d722/scratchpad/prof1 --log-net-log=/private/tmp/claude-501/-Users-ryotasaito-workspace-BigQuery-GA4-sandbox/822ec87f-705b-4a3c-9e86-06a0bcc1d722/scratchpad/net.json --net-log-capture-mode=IncludeSensitive --virtual-time-budget=8000 https://syamozipc.github.io/BigQuery_GA4_sandbox/)",
+      "Bash(pkill -f \"http.server 8934\")",
+      "Bash(pkill -f \"prof_rt\")"
+    ]
+  }
+}

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>07 可視化とAPI | GA4・GTM・BigQuery 学習ガイド</title>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" />
+<link rel="stylesheet" href="assets/guide.css" />
+</head>
+<body>
+<div class="shell" data-page-id="visualize">
+<aside class="side">
+<a class="brand" href="index.html">GA4・GTM・BigQuery<small>学習ガイド</small></a>
+<nav class="chapters" aria-label="章">
+<a data-page="index" href="index.html"><span class="no">00</span><span>全体像とロードマップ</span></a>
+<p class="group">GA4</p>
+<a data-page="ga4-basics" href="ga4-basics.html"><span class="no">01</span><span>GA4の基礎</span></a>
+<a data-page="ga4-custom-dimensions" href="ga4-custom-dimensions.html"><span class="no">02</span><span>カスタムディメンションを画面で見る</span></a>
+<p class="group">GTM</p>
+<a data-page="gtm-basics" href="gtm-basics.html"><span class="no">03</span><span>GTMの基礎</span></a>
+<a data-page="gtm-tutorial" href="gtm-tutorial.html"><span class="no">04</span><span>GTMを実際に使う</span></a>
+<p class="group">BigQuery</p>
+<a data-page="bigquery-basics" href="bigquery-basics.html"><span class="no">05</span><span>BigQueryの基礎</span></a>
+<a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
+<a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
+</nav>
+<div class="side-links"><p>練習用のページ</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム</a></div>
+</aside>
+<main>
+<div class="content">
+<div class="kicker"><span class="chip">07</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-bq">BigQuery</span><span class="chip t-ga4">GA4</span></div>
+<h1>可視化とAPI</h1>
+<p class="lead">集めたデータを人に見せる方法は、GA4 の画面のほかに3つあります。Looker Studio、BigQuery API で作る自作ダッシュボード（dashboard.html）、GA4 Data API で作るリアルタイム画面（realtime.html）です。それぞれの仕組みと向き不向きを整理します。</p>
+
+<div class="toc"><p>この章の内容</p><ol>
+<li><a href="#choose">どれを使うか</a></li>
+<li><a href="#looker">Looker Studio</a></li>
+<li><a href="#auth">ブラウザから Google API を呼ぶ準備</a></li>
+<li><a href="#dashboard">dashboard.html（BigQuery API）</a></li>
+<li><a href="#realtime">realtime.html（GA4 Data API）</a></li>
+</ol></div>
+
+<h2 id="choose">どれを使うか</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>方法</th><th>データの鮮度</th><th>自由度</th><th>費用</th><th>向いている用途</th></tr></thead>
+<tbody>
+<tr><td>GA4 の画面</td><td>数秒〜48時間</td><td>低い（登録したディメンションのみ）</td><td>無料</td><td>日々の確認</td></tr>
+<tr><td>Looker Studio + GA4 コネクタ</td><td>GA4 画面と同じ</td><td>中</td><td>無料</td><td>SQL なしで社内向けレポート</td></tr>
+<tr><td>Looker Studio + BigQuery</td><td>翌日（ストリーミングなら数分）</td><td>高い（SQL で何でも）</td><td>BigQuery のスキャン分</td><td>生データを使った社内ダッシュボード</td></tr>
+<tr><td>dashboard.html（BigQuery API）</td><td>同上</td><td>最も高い（画面も自作）</td><td>同上</td><td>業務システムへの組み込み</td></tr>
+<tr><td>realtime.html（Data API）</td><td>過去30分</td><td>中（GA4 の集計値を任意の組み合わせで）</td><td>無料（クォータあり）</td><td>リアルタイムの監視</td></tr>
+</tbody></table></div>
+
+<h2 id="looker">Looker Studio</h2>
+<p>Google が提供する無料の BI ツールです。BigQuery と直接つながり、ドラッグ＆ドロップでグラフや表を作れます。このリポジトリのレポートは<a href="https://lookerstudio.google.com/reporting/3c89940d-f869-47be-a135-97fee528fcda/page/j5EuF">こちら</a>です。</p>
+<ol class="steps">
+<li><h4>データソースをつなぐ</h4>
+<p><span class="ui-path"><span>作成</span><span>レポート</span></span> でデータソースに「BigQuery」を選び、プロジェクト・データセット・テーブルを指定します。GA4 のテーブルなら「マイプロジェクト」から <code>events_*</code> 相当の日付分割テーブルを選べます。</p></li>
+<li><h4>カスタムクエリで期間を連動させる</h4>
+<p>「カスタムクエリ」を選ぶと SQL を書けます。「期間パラメータを有効にする」にチェックすると、レポートの期間指定が <code>@DS_START_DATE</code> と <code>@DS_END_DATE</code>（<code>YYYYMMDD</code> 形式の文字列）として渡されます。</p>
+<pre data-lang="sql"><code>SELECT
+  PARSE_DATE('%Y%m%d', event_date) AS day,
+  event_name,
+  (SELECT value.string_value FROM UNNEST(user_properties) WHERE key = 'plan') AS plan,
+  COUNT(*) AS events,
+  COUNT(DISTINCT user_pseudo_id) AS users
+FROM `big-query-sample-492309.analytics_324810718.events_*`
+WHERE _TABLE_SUFFIX BETWEEN @DS_START_DATE AND @DS_END_DATE
+GROUP BY day, event_name, plan</code></pre>
+<p>期間を絞らないクエリは、レポートを開くたびに全期間をスキャンします。必ず期間パラメータか、06章の集計済みテーブルを使います。</p>
+<label class="check"><input type="checkbox" id="ls-query"> 期間パラメータ付きのカスタムクエリでグラフを作った</label></li>
+<li><h4>共有する</h4>
+<p>URL で共有でき、Google アカウント単位でアクセスを制御できます。データソースの「データの認証情報」を「オーナー」にすると、閲覧者に BigQuery の権限がなくても見られます。</p></li>
+</ol>
+
+<h2 id="auth">ブラウザから Google API を呼ぶ準備</h2>
+<p>dashboard.html と realtime.html は、サーバーを持たずにブラウザから直接 Google の API を呼んでいます。認証は Google Identity Services（GIS）の OAuth 2.0 で、ログインした人の権限でデータを読みます。</p>
+<ol class="steps">
+<li><h4>OAuth クライアントを作る</h4>
+<p>GCP コンソールの <span class="ui-path"><span>API とサービス</span><span>認証情報</span><span>OAuth クライアント ID を作成</span></span> で、種類を「ウェブ アプリケーション」にします。「承認済みの JavaScript 生成元」に <code>https://syamozipc.github.io</code> と、ローカル用の <code>http://localhost:8000</code> を入れます。</p></li>
+<li><h4>同意画面とスコープを設定する</h4>
+<p>OAuth 同意画面に、使う API のスコープを追加します。公開ステータスが「テスト」の間は、テストユーザーに登録したアカウントしかログインできません。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>ページ</th><th>有効にする API</th><th>スコープ</th></tr></thead>
+<tbody>
+<tr><td>dashboard.html</td><td>BigQuery API</td><td><code>https://www.googleapis.com/auth/bigquery.readonly</code></td></tr>
+<tr><td>realtime.html</td><td>Google Analytics Data API</td><td><code>https://www.googleapis.com/auth/analytics.readonly</code></td></tr>
+</tbody></table></div></li>
+<li><h4>ページ側の流れ</h4>
+<p>どちらのページも同じ流れです。</p>
+<ol>
+<li>「Google でログイン」ボタンで <strong>ID トークン</strong>を受け取り、名前とアイコンを表示する。</li>
+<li><code>google.accounts.oauth2.initTokenClient</code> でスコープを指定し、<strong>アクセストークン</strong>を要求する。</li>
+<li>API 呼び出しの <code>Authorization: Bearer &lt;アクセストークン&gt;</code> ヘッダーに付ける。</li>
+</ol>
+<pre data-lang="javascript"><code>const client = google.accounts.oauth2.initTokenClient({
+  client_id: CLIENT_ID,
+  scope: "https://www.googleapis.com/auth/bigquery.readonly",
+  callback: (resp) => {
+    accessToken = resp.access_token;
+    fetchAll();
+  },
+});
+client.requestAccessToken();</code></pre></li>
+</ol>
+<div class="callout warn"><span class="label">ブラウザ直叩きの限界</span>
+<p>ログインした人の権限で動くので、BigQuery や GA4 の閲覧権限がない人には何も表示されません。誰でも見られる画面にしたいときは、サーバー側でサービスアカウントを使って API を呼び、結果だけを返す構成にします。</p></div>
+
+<h2 id="dashboard">dashboard.html（BigQuery API）</h2>
+<p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">dashboard.html</a> は、BigQuery REST API の <code>jobs.query</code> に SQL を投げ、返ってきた行を Chart.js でグラフにしています。表示しているのは前日までの日次テーブルのデータです。</p>
+<pre data-lang="javascript"><code>const res = await fetch(
+  `https://bigquery.googleapis.com/bigquery/v2/projects/${PROJECT_ID}/queries`,
+  {
+    method: "POST",
+    headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
+    body: JSON.stringify({ query: sql, useLegacySql: false, timeoutMs: 30000 }),
+  },
+);
+const data = await res.json();
+<span class="c">// data.rows = [{ f: [{ v: "12" }, { v: "34" }] }, …]  列の順に値が入る</span></code></pre>
+<p>レスポンスの行は <code>rows[i].f[j].v</code> という形で、値はすべて文字列です。数値として使うときは <code>Number()</code> で変換します。KPI のセッション数は、06章のレシピ4と同じ SQL で数えています。</p>
+<label class="check"><input type="checkbox" id="db-open"> dashboard.html にログインし、期間を変えて表示が変わるのを確認した</label>
+<label class="check"><input type="checkbox" id="db-sql"> dashboard.html のソースで KPI の SQL を読み、06章のレシピと対応づけた</label>
+
+<h2 id="realtime">realtime.html（GA4 Data API）</h2>
+<p>GA4 の画面のリアルタイムは、過去30分固定・カード固定で、任意のディメンションと指標の組み合わせやセグメントは使えません。Data API の <code>runRealtimeReport</code> を直接呼ぶと、過去30分のデータを好きな組み合わせで取れます。無料です。</p>
+<pre data-lang="javascript"><code><span class="c">// ユーザースコープのカスタムディメンションは customUser: を付けて参照する</span>
+const res = await fetch(
+  `https://analyticsdata.googleapis.com/v1beta/properties/${PROPERTY_ID}:runRealtimeReport`,
+  {
+    method: "POST",
+    headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      dimensions: [{ name: "customUser:app_user_id" }],
+      metrics: [{ name: "activeUsers" }, { name: "eventCount" }],
+      dimensionFilter: {
+        filter: {
+          fieldName: "customUser:app_user_id",
+          stringFilter: { matchType: "EXACT", value: uuid },
+        },
+      },
+    }),
+  },
+);</code></pre>
+<ul>
+<li>リアルタイムの API で使えるカスタムディメンションは、ユーザースコープ（<code>customUser:</code>）だけです。イベントスコープ（<code>customEvent:button_name</code> など）は、通常のレポート用の <code>runReport</code> で使います。どちらも02章で登録済みであることが前提です。</li>
+<li><code>minutesAgo</code> ディメンション（<code>"0"</code>〜<code>"29"</code>）を使うと、分単位の推移が取れます。</li>
+<li>レスポンスは <code>rows[i].dimensionValues[j].value</code> と <code>rows[i].metricValues[j].value</code> の形です。</li>
+</ul>
+
+<h3>ユーザー単位で使うときの制約</h3>
+<ul>
+<li><strong>しきい値</strong>: Google シグナル有効時、少人数のデータはプライバシー保護で非表示になります。</li>
+<li><strong>(other) へのまとめ</strong>: UUID のように値の種類が多いディメンションは、行数の上限を超えると <code>(other)</code> に集約されます。</li>
+<li><strong>クォータ</strong>: 標準プロパティには1日あたりのトークン上限があります。短い間隔でのポーリングは要注意です。realtime.html の自動更新は30秒間隔です。</li>
+<li><strong>認証</strong>: ブラウザ直叩きはログインした人の権限になります。</li>
+</ul>
+<p>集計や傾向を見るなら API で十分です。特定ユーザーの行動履歴を業務画面に正確に出したいなら、しきい値と <code>(other)</code> で欠けるので、BigQuery エクスポートか自社DBの方が確実です。</p>
+<label class="check"><input type="checkbox" id="rt-open"> realtime.html でパターンを切り替えながら、ユーザー別の数値が動くのを確認した</label>
+<label class="check"><input type="checkbox" id="rt-custom"> runRealtimeReport のディメンションを <code>customUser:plan</code> に変えて、プラン別の人数を取得した</label>
+
+<h2 id="next">ひと通り終えたら</h2>
+<ul>
+<li>自分のサービスで「計測したいこと」を10個書き出し、それぞれ推奨イベント・カスタムイベントのどちらで、どのパラメータを付けるかを表にしてみる（01章）。</li>
+<li>その表のうち、dataLayer で送るものとクリックトリガーで拾うものを分ける（03章）。</li>
+<li>BigQuery で答えたい問いを1つ決め、06章のレシピを組み合わせて SQL を書く。</li>
+</ul>
+<nav class="pager" aria-label="前後の章">
+<a class="prev" href="bigquery-export.html"><small>← 前の章 06</small>GA4データをBigQueryへ</a>
+</nav>
+</div>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

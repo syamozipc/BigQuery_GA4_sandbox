@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>05 BigQueryの基礎 | GA4・GTM・BigQuery 学習ガイド</title>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" />
+<link rel="stylesheet" href="assets/guide.css" />
+</head>
+<body>
+<div class="shell" data-page-id="bigquery-basics">
+<aside class="side">
+<a class="brand" href="index.html">GA4・GTM・BigQuery<small>学習ガイド</small></a>
+<nav class="chapters" aria-label="章">
+<a data-page="index" href="index.html"><span class="no">00</span><span>全体像とロードマップ</span></a>
+<p class="group">GA4</p>
+<a data-page="ga4-basics" href="ga4-basics.html"><span class="no">01</span><span>GA4の基礎</span></a>
+<a data-page="ga4-custom-dimensions" href="ga4-custom-dimensions.html"><span class="no">02</span><span>カスタムディメンションを画面で見る</span></a>
+<p class="group">GTM</p>
+<a data-page="gtm-basics" href="gtm-basics.html"><span class="no">03</span><span>GTMの基礎</span></a>
+<a data-page="gtm-tutorial" href="gtm-tutorial.html"><span class="no">04</span><span>GTMを実際に使う</span></a>
+<p class="group">BigQuery</p>
+<a data-page="bigquery-basics" href="bigquery-basics.html"><span class="no">05</span><span>BigQueryの基礎</span></a>
+<a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
+<a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
+</nav>
+<div class="side-links"><p>練習用のページ</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム</a></div>
+</aside>
+<main>
+<div class="content">
+<div class="kicker"><span class="chip">05</span><span class="chip kind-basic">基礎</span><span class="chip t-bq">BigQuery</span></div>
+<h1>BigQueryの基礎</h1>
+<p class="lead">BigQuery は Google のフルマネージド型・サーバーレスのデータウェアハウスです。MySQL などの RDBMS と同じ SQL で書けますが、設計思想と課金の仕組みがまったく違います。GA4 のデータを触る前に、ここを押さえておくと料金で失敗しません。</p>
+
+<div class="toc"><p>この章の内容</p><ol>
+<li><a href="#concept">基本概念</a></li>
+<li><a href="#pricing">料金とコストの守り方</a></li>
+<li><a href="#console">コンソールの見方</a></li>
+<li><a href="#ops">基本操作</a></li>
+<li><a href="#sql">BigQuery 特有の SQL</a></li>
+<li><a href="#practice">練習問題</a></li>
+</ol></div>
+
+<h2 id="concept">基本概念</h2>
+<h3>列指向ストレージ</h3>
+<p>MySQL などの行指向DBは、1行分のデータをまとめて保存します。BigQuery は<strong>列単位</strong>で保存します。<code>SELECT name FROM users</code> なら <code>name</code> 列だけを読み、他の列には触りません。これが数十億行でも速く集計できる理由で、同時に「読んだ列の量で課金される」理由でもあります。</p>
+
+<h3>ストレージとコンピュートの分離</h3>
+<p>データの保存と処理が独立しています。サーバーの台数やインデックスを考える必要はなく、クエリを投げるとその都度 Google 側で必要な計算資源が割り当てられます。データが増えてもクエリ性能は落ちにくいです。</p>
+
+<h3>リソース階層</h3>
+<pre data-lang="tree"><code>GCP プロジェクト      big-query-sample-492309   （課金と権限の単位）
+└── データセット      analytics_324810718       （リージョンを持つ。テーブルの入れ物）
+    └── テーブル      events_20260401           （列と行）
+        └── カラム    event_name, event_params, …</code></pre>
+<p>テーブルは <code>`プロジェクトID.データセット名.テーブル名`</code> とバッククォートで囲んで参照します。データセットには<strong>リージョン</strong>（このリポジトリは <code>asia-northeast1</code>）があり、作成後は変えられません。別リージョンのテーブル同士は結合できません。</p>
+
+<h2 id="pricing">料金とコストの守り方</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>項目</th><th>料金（オンデマンド）</th><th>無料枠</th></tr></thead>
+<tbody>
+<tr><td>クエリ</td><td>スキャンしたデータ量に応じて $6.25 / TiB</td><td>毎月 1 TiB</td></tr>
+<tr><td>ストレージ</td><td>保存量に応じて課金（90日更新がないと自動で半額）</td><td>毎月 10 GiB</td></tr>
+<tr><td>ストリーミング挿入</td><td>GA4 のストリーミングエクスポートなどで発生</td><td>なし</td></tr>
+</tbody></table></div>
+<p>金額は改定されることがあるので、最新は公式の料金ページで確認してください。学習用途の GA4 データなら、無料枠の中に収まるのが普通です。</p>
+
+<h3>コストを守る5つの習慣</h3>
+<ol>
+<li><strong><code>SELECT *</code> を使わない</strong>。全列をスキャンします。必要な列だけ書きます。</li>
+<li><strong><code>LIMIT</code> では安くならない</strong>。<code>LIMIT 10</code> を付けても、スキャン量は全件分です。中身を見たいだけなら、テーブルの「プレビュー」タブ（無料）を使います。</li>
+<li><strong>日付で絞る</strong>。GA4 のテーブルは日付ごとに分かれているので、<code>_TABLE_SUFFIX</code> で範囲を絞るとスキャン量が減ります。</li>
+<li><strong>実行前に処理量を見る</strong>。エディタ右上に「このクエリを実行すると 12.3 MB が処理されます」と出ます（ドライラン）。</li>
+<li><strong>上限を掛ける</strong>。<span class="ui-path"><span>クエリ設定</span><span>詳細オプション</span><span>課金される最大バイト数</span></span> を設定すると、超えるクエリは実行前に失敗します。</li>
+</ol>
+
+<div class="callout tip"><span class="label">BigQuery サンドボックス</span>
+<p>課金アカウントを紐づけなくても、サンドボックスとして無料枠の範囲で使えます。ただしテーブルが60日で自動削除され、GA4 のストリーミングエクスポートは使えません。</p></div>
+
+<h2 id="console">コンソールの見方</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>場所</th><th>使い方</th></tr></thead>
+<tbody>
+<tr><td>エクスプローラ（左）</td><td>プロジェクト › データセット › テーブルのツリー。テーブルを開くと「スキーマ」「詳細」「プレビュー」タブがある</td></tr>
+<tr><td>エディタ（中央）</td><td>SQL を書いて実行。右上にドライランの処理量が出る</td></tr>
+<tr><td>クエリ結果（下）</td><td>結果の表、「ジョブ情報」で実際の処理量と時間、「結果を保存」でCSVなどに出力</td></tr>
+<tr><td>個人の履歴 / プロジェクトの履歴</td><td>過去に実行したクエリ。コピーして再実行できる</td></tr>
+</tbody></table></div>
+
+<h2 id="ops">基本操作</h2>
+<h3>データセットとテーブルを作る</h3>
+<pre data-lang="sql"><code>CREATE SCHEMA IF NOT EXISTS `big-query-sample-492309.tutorial`
+OPTIONS (location = 'asia-northeast1');
+
+CREATE TABLE IF NOT EXISTS `big-query-sample-492309.tutorial.employees` (
+  employee_id INT64,
+  name        STRING,
+  department  STRING,
+  salary      INT64
+);</code></pre>
+<p>BigQuery の SQL では、データセットのことを <code>SCHEMA</code> と書きます。</p>
+
+<h3>データを挿入する</h3>
+<p>小規模なら <code>INSERT INTO</code> で SQL から直接挿入できます。本番の大量データには向かないので、GCS からのバッチロードや Storage Write API を使います。</p>
+<pre data-lang="sql"><code>INSERT INTO `tutorial.employees` (employee_id, name, department, salary)
+VALUES
+  (1, '田中太郎', 'エンジニアリング', 6000000),
+  (2, '佐藤花子', 'マーケティング', 5200000);</code></pre>
+
+<h3>クエリを実行する</h3>
+<p>ワイルドカード <code>events_*</code> で、日付ごとに分かれた複数のテーブルをまとめてクエリできます。<code>_TABLE_SUFFIX</code> は <code>*</code> に当たる部分の文字列で、これで日付範囲を絞るとスキャン量が減ります。</p>
+<pre data-lang="sql"><code>SELECT event_name, COUNT(*) AS cnt
+FROM `big-query-sample-492309.analytics_324810718.events_*`
+WHERE _TABLE_SUFFIX BETWEEN '20260301' AND '20260401'
+GROUP BY event_name
+ORDER BY cnt DESC;</code></pre>
+
+<h3>エクスポート</h3>
+<ul>
+<li><strong>コンソールから</strong>: クエリ結果の「結果を保存」から CSV をダウンロード（1GB以下）。</li>
+<li><strong>SQL で</strong>: <code>EXPORT DATA OPTIONS (uri = 'gs://…/*.csv', format = 'CSV') AS (SELECT …)</code></li>
+<li><strong>bq コマンドで</strong>: <code>bq extract --destination_format CSV dataset.table gs://…</code></li>
+</ul>
+
+<h3>インポート</h3>
+<ul>
+<li><strong>コンソールから</strong>: データセットの「テーブルを作成」で「アップロード」を選ぶ（10MB以下）。</li>
+<li><strong>SQL で</strong>: <code>LOAD DATA INTO dataset.table FROM FILES (format = 'CSV', uris = ['gs://…'])</code></li>
+<li><strong>bq コマンドで</strong>: <code>bq load --source_format=CSV --autodetect dataset.table ./file.csv</code></li>
+</ul>
+
+<h2 id="sql">BigQuery 特有の SQL</h2>
+<p>GA4 のデータを扱うときに必ず出てくるものだけを挙げます。</p>
+
+<h3>STRUCT と ARRAY</h3>
+<p>BigQuery の列は、入れ子の構造（<code>STRUCT</code>）や配列（<code>ARRAY</code>）を持てます。GA4 の <code>device.category</code> は STRUCT、<code>event_params</code> は「STRUCT の ARRAY」です。STRUCT はドットで中に入れますが、ARRAY は <code>UNNEST</code> で行に展開しないと中が見られません。</p>
+<pre data-lang="sql"><code><span class="c">-- STRUCT: ドットで取り出す</span>
+SELECT device.category, geo.city FROM `…events_*` WHERE _TABLE_SUFFIX = '20260401';
+
+<span class="c">-- ARRAY: UNNEST で展開する（1イベントが params の数だけ行になる）</span>
+SELECT event_name, p.key, p.value.string_value
+FROM `…events_*`, UNNEST(event_params) AS p
+WHERE _TABLE_SUFFIX = '20260401';</code></pre>
+
+<h3>よく使う関数</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>関数</th><th>用途</th><th>例</th></tr></thead>
+<tbody>
+<tr><td><code>PARSE_DATE</code></td><td>文字列の日付を DATE に</td><td><code>PARSE_DATE('%Y%m%d', event_date)</code></td></tr>
+<tr><td><code>TIMESTAMP_MICROS</code></td><td>マイクロ秒の整数を TIMESTAMP に</td><td><code>TIMESTAMP_MICROS(event_timestamp)</code></td></tr>
+<tr><td><code>DATETIME(ts, tz)</code></td><td>タイムゾーンを指定して日時に</td><td><code>DATETIME(TIMESTAMP_MICROS(event_timestamp), 'Asia/Tokyo')</code></td></tr>
+<tr><td><code>FORMAT_DATE</code></td><td>DATE を文字列に（<code>_TABLE_SUFFIX</code> 用）</td><td><code>FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))</code></td></tr>
+<tr><td><code>SAFE_CAST</code> / <code>SAFE_DIVIDE</code></td><td>失敗時にエラーではなく NULL を返す</td><td><code>SAFE_DIVIDE(purchases, sessions)</code></td></tr>
+<tr><td><code>COUNTIF</code></td><td>条件付きの件数</td><td><code>COUNTIF(event_name = 'purchase')</code></td></tr>
+<tr><td><code>QUALIFY</code></td><td>ウィンドウ関数の結果で絞る</td><td><code>QUALIFY ROW_NUMBER() OVER (PARTITION BY user_pseudo_id ORDER BY event_timestamp) = 1</code></td></tr>
+</tbody></table></div>
+
+<h3>シャーディングとパーティション</h3>
+<p>GA4 のエクスポートは日付ごとに別テーブル（<code>events_20260401</code>, <code>events_20260402</code> …）を作ります。これを<strong>シャーディング</strong>と呼び、ワイルドカードと <code>_TABLE_SUFFIX</code> で扱います。自分でテーブルを作るときは、1つのテーブルを日付列で区切る<strong>パーティション分割テーブル</strong>の方が推奨されています。</p>
+
+<h2 id="practice">練習問題</h2>
+<label class="check"><input type="checkbox" id="bq-dataset"> <code>tutorial</code> データセットと <code>employees</code> テーブルを作り、2行挿入した。</label>
+<label class="check"><input type="checkbox" id="bq-dryrun"> <code>SELECT *</code> と必要な列だけの <code>SELECT</code> で、ドライランの処理量を比べた。</label>
+<label class="check"><input type="checkbox" id="bq-limit"> <code>LIMIT 10</code> を付けても処理量が変わらないことを確かめた。</label>
+<label class="check"><input type="checkbox" id="bq-preview"> GA4 のテーブルを「スキーマ」タブと「プレビュー」タブで眺め、<code>event_params</code> が入れ子になっているのを見た。</label>
+<label class="check"><input type="checkbox" id="bq-cap"> 「課金される最大バイト数」を設定した。</label>
+<nav class="pager" aria-label="前後の章">
+<a class="prev" href="gtm-tutorial.html"><small>← 前の章 04</small>GTMを実際に使う</a>
+<a class="next" href="bigquery-export.html"><small>次の章 06 →</small>GA4データをBigQueryへ</a>
+</nav>
+</div>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>
