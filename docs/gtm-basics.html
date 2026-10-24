@@ -192,7 +192,7 @@ dataLayer.push({ user_plan: "pro" });</code></pre>
 <h2 id="publish">編集から公開までの流れ</h2>
 <ol class="steps">
 <li><h4>ワークスペースで編集</h4><p>タグ・トリガー・変数を作ります。この時点ではまだ本番に反映されていません。</p></li>
-<li><h4>プレビューで確認</h4><p>右上の「プレビュー」で Tag Assistant が開き、自分のブラウザだけに編集中の設定が適用されます。dataLayer の中身、各メッセージで発火したタグ・しなかったタグ、変数の値が見られます。</p></li>
+<li><h4>プレビューで確認</h4><p>右上の「プレビュー」で Tag Assistant が開き、自分のブラウザだけに編集中の設定が適用されます。dataLayer の中身、各メッセージで配信されたタグ・未配信のタグ、変数の値が見られます。設定を変えたら、プレビューを接続し直します。</p></li>
 <li><h4>公開</h4><p>「公開」を押し、バージョン名と説明（何を変えたか）を書いて公開します。全訪問者に反映されます。</p></li>
 <li><h4>必要なら切り戻し</h4><p><span class="ui-path"><span>バージョン</span></span> から過去の版を選んで「公開」すれば元に戻ります。</p></li>
 </ol>
@@ -262,14 +262,14 @@ dataLayer.push({ user_plan: "pro" });</code></pre>
 <div class="table-wrap"><table>
 <thead><tr><th>dataLayer の event</th><th>プレビューでの表示</th><th>タイミング</th></tr></thead>
 <tbody>
-<tr><td><code>gtm.init_consent</code> / <code>gtm.init</code></td><td>Consent Initialization / Initialization</td><td>何よりも先。同意設定や Google タグ用</td></tr>
-<tr><td><code>gtm.js</code></td><td>Container Loaded</td><td>コンテナ読み込み直後（ページビュー）</td></tr>
+<tr><td><code>gtm.init_consent</code> / <code>gtm.init</code></td><td>同意の初期化 / 初期化</td><td>何よりも先。同意設定や Google タグ用</td></tr>
+<tr><td><code>gtm.js</code></td><td>コンテナの読み込み</td><td>コンテナ読み込み直後（ページビュー）</td></tr>
 <tr><td><code>gtm.dom</code></td><td>DOM Ready</td><td>HTML の解析完了</td></tr>
-<tr><td><code>gtm.load</code></td><td>Window Loaded</td><td>画像なども含めて読み込み完了</td></tr>
-<tr><td><code>gtm.click</code> / <code>gtm.linkClick</code></td><td>Click</td><td>クリックトリガーがあるときだけ監視される</td></tr>
-<tr><td><code>gtm.formSubmit</code></td><td>Form Submit</td><td>フォーム送信トリガーがあるとき</td></tr>
-<tr><td><code>gtm.elementVisibility</code></td><td>Element Visibility</td><td>要素の表示トリガーがあるとき</td></tr>
-<tr><td><code>gtm.scrollDepth</code></td><td>Scroll Depth</td><td>スクロール距離トリガーがあるとき</td></tr>
+<tr><td><code>gtm.load</code></td><td>ウィンドウの読み込み</td><td>画像なども含めて読み込み完了</td></tr>
+<tr><td><code>gtm.click</code> / <code>gtm.linkClick</code></td><td>クリック</td><td>クリックトリガーがあるときだけ監視される</td></tr>
+<tr><td><code>gtm.formSubmit</code></td><td>フォーム送信</td><td>フォーム送信トリガーがあるとき</td></tr>
+<tr><td><code>gtm.elementVisibility</code></td><td>要素の表示</td><td>要素の表示トリガーがあるとき</td></tr>
+<tr><td><code>gtm.scrollDepth</code></td><td>スクロール距離</td><td>スクロール距離トリガーがあるとき</td></tr>
 </tbody></table></div>
 <p>クリックなどの監視は、対応するトリガーが1つでもあるときだけ有効になります。「クリックしても dataLayer に <code>gtm.click</code> が出ない」ときは、まずクリックトリガーを作ってあるかを確認します。</p>
 </details>

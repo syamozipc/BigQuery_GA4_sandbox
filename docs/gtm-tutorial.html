@@ -46,10 +46,11 @@
 </ol></div>
 
 <div class="callout tip"><span class="label">ページの見方</span>
-<p>gtm.html の右側には <strong>dataLayer の中身</strong>が新しい順に表示されます。ボタンを押したときに何が積まれたかを見ながら進めると、GTM の動きがよく分かります。青枠がページのコードが積んだもの、灰色が GTM 自身が積んだもの（<code>gtm.*</code>）です。</p></div>
+<p>gtm.html の右側には <strong>dataLayer の中身</strong>が新しい順に表示されます。ボタンを押したときに何が積まれたかを見ながら進めると、GTM の動きがよく分かります。青枠がページのコードが積んだもの、灰色が GTM 自身が積んだもの（<code>gtm.*</code>）です。<code>(event なし)</code> は <code>event</code> キーのない push で、トリガーは動きません。</p></div>
 
 <h2 id="inventory">作るものの一覧</h2>
-<p>この章で GTM に作るものをまとめておきます。名前は一例ですが、種類の略号を先頭に付けると一覧で探しやすくなります。</p>
+<p>この章で GTM に作るものをまとめておきます。名前は一例です。先頭の略号は種類を表し、一覧で探しやすくするための慣習です（dlv = データレイヤーの変数、CE = カスタムイベント、cjs = カスタム JavaScript、aev = 自動イベント変数）。<code>cta</code> は Call To Action の略で、資料請求のように行動を促すボタンのことです。</p>
+<details class="more"><summary>一覧を開く（16項目）</summary>
 <div class="table-wrap"><table>
 <thead><tr><th>手順</th><th>種類</th><th>名前</th><th>中身</th></tr></thead>
 <tbody>
@@ -64,9 +65,13 @@
 <tr><td></td><td>トリガー</td><td>Click - class</td><td>クリック（クラス名で判定）</td></tr>
 <tr><td></td><td>タグ</td><td>GA4 - ui_click</td><td>GA4 イベント</td></tr>
 <tr><td></td><td>トリガー</td><td>Click - data-attr</td><td>クリック（data属性で判定）</td></tr>
-<tr><td><strong>発展</strong></td><td>トリガー・タグ</td><td>Form - gtm-form</td><td>フォームの送信 → <code>generate_lead</code></td></tr>
-<tr><td></td><td>変数・トリガー・タグ</td><td>Vis - promo-banner</td><td>要素の表示 → <code>view_promotion</code></td></tr>
+<tr><td><strong>発展</strong></td><td>トリガー</td><td>Form - gtm-form</td><td>フォームの送信</td></tr>
+<tr><td></td><td>タグ</td><td>GA4 - generate_lead</td><td>GA4 イベント</td></tr>
+<tr><td></td><td>変数</td><td>aev - promo name</td><td>自動イベント変数</td></tr>
+<tr><td></td><td>トリガー</td><td>Vis - promo-banner</td><td>要素の表示</td></tr>
+<tr><td></td><td>タグ</td><td>GA4 - view_promotion</td><td>GA4 イベント</td></tr>
 </tbody></table></div>
+</details>
 
 <h2 id="setup">準備: コンテナと Google タグ</h2>
 <ol class="steps">
@@ -79,6 +84,7 @@
 <tr><th>ターゲット プラットフォーム</th><td>ウェブ</td></tr>
 </tbody></table></div>
 <p>利用規約に同意するとインストール用のスニペットが表示されます。gtm.html にはすでに組み込んであるので、閉じて構いません。画面上部に表示される <code>GTM-XXXXXXX</code> がコンテナIDです。</p>
+<p><code>GTM-</code> は設定を入れる箱（コンテナ）のID、<code>G-</code> は GA4 の送り先（測定ID）で、まったく別物です。GTM の箱の中に Google タグを作り、そのタグが <code>G-</code> に送ります。</p>
 <label class="check"><input type="checkbox" id="setup-container"> コンテナを作り、コンテナIDを控えた</label></li>
 
 <li><h4>gtm.html にコンテナIDを設定する</h4>
@@ -91,22 +97,39 @@
 <div class="table-wrap"><table class="form-table"><tbody>
 <tr><th>タグ名</th><td>GA4 - Google タグ</td></tr>
 <tr><th>タグ ID</th><td><code>G-FEHSK6QJLE</code></td></tr>
-<tr><th>共有イベント設定 › イベント パラメータ</th><td><code>tag_source</code> = <code>gtm</code><br><small>全イベントに付く。index.html（gtag.js）から来たデータと BigQuery で見分けるため</small></td></tr>
+<tr><th>共有イベントの設定</th><td>「イベントの設定変数」は「なし」のまま、「パラメータを追加」で <code>tag_source</code> = <code>gtm</code><br><small>全イベントに付く。index.html（gtag.js）から来たデータと見分けるため</small></td></tr>
 <tr><th>トリガー</th><td>Initialization - All Pages</td></tr>
 </tbody></table></div>
 <p>このタグだけで <code>page_view</code> などの自動イベントが送られるようになります。</p>
 <label class="check"><input type="checkbox" id="setup-gtag"> Google タグを作った</label></li>
 
 <li><h4>プレビューで接続する</h4>
-<p>GTM 画面右上の「プレビュー」を押すと Tag Assistant が開きます。gtm.html のURLを入れて「Connect」を押すと、別ウィンドウで gtm.html が開き、右下に「Tag Assistant Connected」と出ます。</p>
-<p>Tag Assistant のタブに戻り、左の一覧で「Initialization」を選ぶと、<strong>Tags Fired</strong> に「GA4 - Google タグ」が出ています。GA4 のリアルタイムにも <code>page_view</code> が届きます。</p>
-<p>以降、GTM で設定を変えたら、もう一度「プレビュー」を押して接続し直すと最新の設定で試せます。</p>
+<p>GTM 画面右上の「プレビュー」を押すと Tag Assistant が開きます。gtm.html のURLを入れて「Connect」を押すと、別ウィンドウで gtm.html が開き、右下に「Tag Assistant Connected」と出ます。ボタンは、この接続で開いた gtm.html で押します。</p>
+<p>Tag Assistant の画面の見方です。</p>
+<ul>
+<li><strong>上部のタブ</strong>: <code>GTM-KXV4CBBD</code> は GTM の動き（どのタグが動いたか）、<code>G-FEHSK6QJLE</code> は GA4 に実際に送った内容です。</li>
+<li><strong>左の一覧</strong>: dataLayer に積まれたメッセージが新しい順に並びます。「同意の初期化」「初期化」「コンテナの読み込み」「DOM Ready」「ウィンドウの読み込み」は GTM が自分で積むもので、ボタンを押すと <code>cta_click</code> などが上に増えます。</li>
+<li><strong>右側</strong>: 選んだメッセージについて、<strong>タグ</strong>・<strong>変数</strong>・<strong>データレイヤー</strong>のタブで中身が見られます。</li>
+</ul>
+<p>左の一覧で「初期化」を選ぶと、「配信されたタグ」に「GA4 - Google タグ」が出ています。</p>
+<p>GA4 に届いたかは、<span class="ui-path"><span>レポート</span><span>リアルタイムの概要</span></span> の「イベント数（イベント名）」カードで確かめます。<code>page_view</code> を押し、パラメータの一覧から <code>tag_source</code> を開いて値が <code>gtm</code> なら GTM 経由です。パラメータはアルファベット順なので、<code>tag_source</code> は一覧の下の方にあります。</p>
+<div class="callout warn"><span class="label">設定を変えたら接続し直す</span>
+<p>プレビューは、接続した時点の設定で動きます。GTM で何かを保存したら、必ずもう一度「プレビュー」を押して接続し直してください。忘れると、新しいタグが「未配信」のまま、パラメータも付かないままになります。</p></div>
 <label class="check"><input type="checkbox" id="setup-preview"> プレビューで Google タグの発火を確認した</label></li>
 </ol>
 
 <h2 id="a">方式A: dataLayer.push</h2>
 <p>gtm.html の「資料請求」ボタンは、押すと次の1行を実行します。GTM 側では「<code>event</code> が <code>cta_click</code> のメッセージが来たら、その中の <code>cta_name</code> と <code>cta_position</code> を GA4 に送る」設定を作ります。</p>
 <pre data-lang="javascript"><code>dataLayer.push({ event: "cta_click", cta_name: "資料請求", cta_position: "hero" });</code></pre>
+<p>dataLayer は、ページから GTM への「連絡メモを入れる箱」です。ページは「何が起きたか」をメモに書くだけで、GA4 のことは知りません。GTM がメモを読み、どこに何を送るかを決めます。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>メモの項目</th><th>GTM での使われ方</th></tr></thead>
+<tbody>
+<tr><td><code>event: "cta_click"</code></td><td>何が起きたか。トリガーがこの値でルールを選ぶ</td></tr>
+<tr><td><code>cta_name</code>, <code>cta_position</code></td><td>付け足しの情報。変数で読み出してタグに渡す</td></tr>
+</tbody></table></div>
+<div class="callout tip"><span class="label">設定前に一度押してみる</span>
+<p>何も設定していない状態で「資料請求」を押すと、Tag Assistant の左の一覧に <code>cta_click</code> は増えますが、「配信されたタグ」は「なし」です。GTM はメモを受け取っても、トリガーとタグがなければ GA4 に何も送りません。設定後と見比べると違いが分かります。</p></div>
 
 <ol class="steps">
 <li><h4>データレイヤーの変数を作る</h4>
@@ -144,15 +167,17 @@
 <li><h4>プレビューで確かめる</h4>
 <p>プレビューを接続し直し、gtm.html で「資料請求」を押します。Tag Assistant の左に <code>cta_click</code> が増えるので選びます。</p>
 <ul>
-<li><strong>Tags</strong> タブ: 「GA4 - cta_click」が Tags Fired にある。</li>
-<li><strong>Variables</strong> タブ: <code>dlv - cta_name</code> が「資料請求」になっている。</li>
-<li><strong>Data Layer</strong> タブ: push したオブジェクトがそのまま見える。</li>
+<li><strong>タグ</strong>タブ: 「GA4 - cta_click」が「配信されたタグ」にある。</li>
+<li><strong>変数</strong>タブ: <code>dlv - cta_name</code> が「資料請求」、<code>dlv - cta_position</code> が「hero」になっている。</li>
+<li><strong>データレイヤー</strong>タブ: push したオブジェクトがそのまま見える。</li>
 </ul>
+<p>変数のタイプやタグのタイプが「不明な変数タイプ」「不明なタグタイプ」と表示されることがありますが、値が正しく取れていれば問題ありません。「未配信のタグ」に別のタグが並ぶのも正常です。そのメッセージでは発火しない、別のトリガーのタグだからです。</p>
 <p>「無料で始める」を押すと、同じタグが <code>cta_position = footer</code> で発火します。タグを1つ作れば、push する値を変えるだけで使い回せるのが方式Aの強みです。</p>
 <label class="check"><input type="checkbox" id="a-preview"> プレビューで cta_click の発火と変数の値を確認した</label></li>
 
 <li><h4>練習: sign_up を自分で作る</h4>
 <p>「会員登録する」ボタンは 0.8 秒待ってから <code>{ event: "sign_up", method: "email" }</code> を push します。本物のサイトでは API が成功した後に push する、という想定です。これまでと同じ手順で、変数 <code>dlv - method</code>、トリガー <code>CE - sign_up</code>、タグ <code>GA4 - sign_up</code>（パラメータ <code>method</code>）を作ってみてください。</p>
+<p><code>method</code> は GA4 の既定ディメンション「方法」なので、カスタムディメンションに登録しなくても GA4 で見られます。</p>
 <label class="check"><input type="checkbox" id="a-signup"> sign_up を自分で設定し、プレビューで確認した</label></li>
 
 <li><h4>e コマースのデータを送る</h4>
@@ -160,11 +185,20 @@
 <div class="table-wrap"><table class="form-table"><tbody>
 <tr><th>トリガー</th><td>CE - add_to_cart（カスタム イベント、イベント名 <code>add_to_cart</code>）</td></tr>
 <tr><th>タグ</th><td>GA4 イベント、イベント名 <code>add_to_cart</code></td></tr>
-<tr><th>その他の設定</th><td>「e コマースデータを送信」にチェック、データソースは「Data Layer」</td></tr>
+<tr><th>その他の設定 › e コマース</th><td>「e コマースデータを送信」にチェック。その下に出る「データソース」は「Data Layer」</td></tr>
 </tbody></table></div>
+<p>GA4 イベントタグが送るのは、基本的に「イベント パラメータ」の欄に書いたものだけです。チェックを入れると、dataLayer の最新の <code>ecommerce</code> を丸ごと読み、<code>currency</code>・<code>value</code>・<code>items</code> を送ります。チェックを忘れると、イベントは届くのに金額と商品の情報が空になります。データソースのもう1つの選択肢「変数」は、dataLayer が推奨の形でないサイトで、変数で組み立てたオブジェクトを渡すときに使います。</p>
+<p>保存してプレビューを接続し直し、「プロプランをカートに追加」を押して確かめます。</p>
+<ul>
+<li><code>GTM-KXV4CBBD</code> のタブ: <code>add_to_cart</code> で「GA4 - add_to_cart」が配信されている。</li>
+<li><code>G-FEHSK6QJLE</code> のタブ: <code>add_to_cart</code> の送信内容に <code>items</code> が入っている。<strong>チェックの効果はここでしか見分けられません。</strong></li>
+</ul>
 <p>BigQuery では <code>items</code> 列（配列）に商品の情報が入ります（06章）。</p>
-<label class="check"><input type="checkbox" id="a-ecommerce"> add_to_cart を e コマースデータ付きで送った</label></li>
+<label class="check"><input type="checkbox" id="a-ecommerce"> G-FEHSK6QJLE のタブで add_to_cart に items が入っているのを確認した</label></li>
 </ol>
+<div class="callout tip"><span class="label">実務での省力化</span>
+<p>ここでは仕組みを理解するためにイベントごとにタグを作りましたが、実務ではタグを使い回すのが普通です。イベント名に <code>{{Event}}</code> を入れた GA4 イベントタグを1つ作り、トリガーはカスタムイベントで「正規表現一致を使用」にして <code>^(cta_click|sign_up)$</code> のように複数の名前に反応させます。新しいイベントを足すときは、ページの push と正規表現への追記だけで済みます。</p></div>
+
 
 <h2 id="b">方式B: クラス名・data属性</h2>
 <p>gtm.html の「方式B」のボタンには計測のコードがありません。HTML はこれだけです。</p>
@@ -190,7 +224,7 @@
 <label class="check"><input type="checkbox" id="b-trigger"> トリガー Click - class を作った</label></li>
 
 <li><h4>押された要素の名前を取る変数を作る</h4>
-<p>どのボタンが押されたかは <code>data-track-name</code> 属性で区別します。子要素を押した場合にも対応するため、親をたどって属性を探すカスタム JavaScript 変数を作ります。</p>
+<p>どのボタンが押されたかは <code>data-track-name</code> 属性で区別します。子要素を押した場合にも対応するため、親をたどって属性を探すカスタム JavaScript 変数を作ります。この変数は、次の手順でタグのパラメータに <code>{{cjs - track name}}</code> と書いたときに紐づき、タグが発火するたびに実行されます。</p>
 <p><span class="ui-path"><span>変数</span><span>ユーザー定義変数</span><span>新規</span><span>カスタム JavaScript</span></span>、変数名は <code>cjs - track name</code> です。</p>
 <pre data-lang="javascript"><code>function () {
   var el = {{Click Element}};
@@ -203,6 +237,7 @@
 <label class="check"><input type="checkbox" id="b-var"> 変数 cjs - track name を作った</label></li>
 
 <li><h4>GA4 イベントタグを作る</h4>
+<p><span class="ui-path"><span>タグ</span><span>新規</span><span>Google アナリティクス: GA4 イベント</span></span></p>
 <div class="table-wrap"><table class="form-table"><tbody>
 <tr><th>タグ名</th><td>GA4 - ui_click</td></tr>
 <tr><th>測定 ID</th><td><code>G-FEHSK6QJLE</code></td></tr>
@@ -213,7 +248,7 @@
 <label class="check"><input type="checkbox" id="b-tag"> タグ GA4 - ui_click を作った</label></li>
 
 <li><h4>プレビューで確かめる</h4>
-<p>接続し直して「プロプランを見る」を押します。gtm.html の右側に <code>gtm.click</code> が現れ、<code>gtm.element</code> に押された要素（<code>&lt;button.js-track-click[data-track-name="pricing_pro"]&gt;</code>）が入っているのが見えます。Tag Assistant ではこの Click で「GA4 - ui_click」が発火し、<code>cjs - track name</code> が <code>pricing_pro</code> になっています。</p>
+<p>接続し直して「プロプランを見る」を押します。gtm.html の右側に <code>gtm.click</code> が現れ、<code>gtm.element</code> に押された要素（<code>&lt;button.js-track-click[data-track-name="pricing_pro"]&gt;</code>）が入っているのが見えます。Tag Assistant では左の一覧の「クリック」で「GA4 - ui_click」が配信され、<code>cjs - track name</code> が <code>pricing_pro</code> になっています。</p>
 <p>▶ アイコンの部分を狙って押しても同じ結果になることも確かめてください。</p>
 <label class="check"><input type="checkbox" id="b-preview"> ボタン本体とアイコンの両方で発火を確認した</label></li>
 </ol>
@@ -224,7 +259,7 @@
 <p>方式Bの弱点は「見た目のための名前に計測が依存する」ことです。デザイン改修でクラス名が変わったときに何が起きるかを試します。</p>
 <ol class="steps">
 <li><h4>クラス名を変えて押す</h4>
-<p>gtm.html の「デザイン改修をシミュレート（クラス名を変更）」をオンにします。ボタンのクラスが <code>js-track-click</code> から <code>btn-cta-v2</code> に変わります。この状態で「プロプランを見る」を押すと、<code>gtm.click</code> は出ますが、Tag Assistant では「GA4 - ui_click」が <strong>Tags Not Fired</strong> に移ります。エラーはどこにも出ません。</p>
+<p>gtm.html の「デザイン改修をシミュレート（クラス名を変更）」をオンにします。ボタンのクラスが <code>js-track-click</code> から <code>btn-cta-v2</code> に変わります。この状態で「プロプランを見る」を押すと、<code>gtm.click</code> は出ますが、Tag Assistant では「GA4 - ui_click」が <strong>未配信のタグ</strong> に移ります。エラーはどこにも出ません。</p>
 <p>一方、方式Aの「資料請求」は変わらず発火します。push のコードは見た目と関係ないからです。</p>
 <label class="check"><input type="checkbox" id="br-class"> クラス名の変更で ui_click が止まるのを確認した</label></li>
 
@@ -232,6 +267,7 @@
 <p>トリガー「Click - class」を開き、右上のメニューから「コピーを作成」します。名前を <code>Click - data-attr</code> に、条件の CSS セレクタを次に変えます。</p>
 <pre data-lang="css"><code>[data-track-name], [data-track-name] *</code></pre>
 <p>タグ「GA4 - ui_click」のトリガーを <code>Click - data-attr</code> に差し替えて、プレビューを接続し直します。クラス名を変えたままでもタグが発火するようになります。</p>
+<p>確かめ終わったら、gtm.html のスイッチをオフに戻しておきます。</p>
 <label class="check"><input type="checkbox" id="br-data"> data属性のトリガーならクラス名を変えても発火するのを確認した</label></li>
 </ol>
 <div class="callout key"><span class="label">ここで分かったこと</span>
@@ -244,46 +280,95 @@
 <h2 id="c">発展: フォームと要素の表示</h2>
 <ol class="steps">
 <li><h4>フォーム送信を計測する</h4>
-<p><span class="ui-path"><span>組み込み変数</span><span>設定</span></span> で「フォーム」の <code>Form ID</code> を有効にしてから、トリガーを作ります。</p>
+<p>先に <span class="ui-path"><span>変数</span><span>組み込み変数</span><span>設定</span></span> で「フォーム」の <code>Form ID</code> を有効にします。</p>
+<p><strong>トリガー</strong>: <span class="ui-path"><span>トリガー</span><span>新規</span><span>フォームの送信</span></span>（「ユーザー エンゲージメント」の中）</p>
 <div class="table-wrap"><table class="form-table"><tbody>
-<tr><th>トリガー</th><td>フォームの送信。名前 <code>Form - gtm-form</code></td></tr>
-<tr><th>タグの配信を待つ / 妥当性をチェック</th><td>どちらもオフ<br><small>gtm.html は送信を <code>preventDefault()</code> で止めているため、「妥当性をチェック」がオンだと発火しない</small></td></tr>
-<tr><th>発生場所</th><td>一部のフォーム ／ <code>Form ID</code> <code>等しい</code> <code>gtm-form</code></td></tr>
-<tr><th>タグ</th><td>GA4 イベント <code>generate_lead</code>（推奨イベント）、パラメータ <code>form_id</code> = <code>{{Form ID}}</code></td></tr>
+<tr><th>トリガー名</th><td>Form - gtm-form</td></tr>
+<tr><th>タグの配信を待つ</th><td>オフ</td></tr>
+<tr><th>妥当性をチェック</th><td>オフ<br><small>gtm.html は送信を <code>preventDefault()</code> で止めているため、オンだと発火しない</small></td></tr>
+<tr><th>このトリガーの発生場所</th><td>一部のフォーム ／ <code>Form ID</code> <code>等しい</code> <code>gtm-form</code></td></tr>
+</tbody></table></div>
+<p><strong>タグ</strong>: <span class="ui-path"><span>タグ</span><span>新規</span><span>Google アナリティクス: GA4 イベント</span></span></p>
+<div class="table-wrap"><table class="form-table"><tbody>
+<tr><th>タグ名</th><td>GA4 - generate_lead</td></tr>
+<tr><th>測定 ID</th><td><code>G-FEHSK6QJLE</code></td></tr>
+<tr><th>イベント名</th><td><code>generate_lead</code><br><small>見込み客の獲得を表す推奨イベント</small></td></tr>
+<tr><th>イベント パラメータ</th><td><code>form_id</code> = <code>{{Form ID}}</code><br><small>02章で登録済みなので GA4 でそのまま見られる</small></td></tr>
+<tr><th>トリガー</th><td>Form - gtm-form</td></tr>
 </tbody></table></div>
 <label class="check"><input type="checkbox" id="c-form"> フォーム送信で generate_lead を送った</label></li>
 
 <li><h4>バナーの表示を計測する</h4>
 <p>gtm.html の下の方にある緑のバナー（<code>id="promo-banner"</code>）が画面に入ったときに送ります。</p>
+<p><strong>変数</strong>: <span class="ui-path"><span>変数</span><span>ユーザー定義変数</span><span>新規</span><span>自動イベント変数</span></span></p>
 <div class="table-wrap"><table class="form-table"><tbody>
-<tr><th>トリガー</th><td>要素の表示。名前 <code>Vis - promo-banner</code></td></tr>
-<tr><th>選択方法</th><td>CSS セレクタ <code>#promo-banner</code></td></tr>
-<tr><th>このトリガーを起動するタイミング</th><td>1ページにつき1度</td></tr>
-<tr><th>最小表示率</th><td>50%</td></tr>
-<tr><th>変数</th><td>自動イベント変数（要素の属性 <code>data-promo-name</code>）。名前 <code>aev - promo name</code></td></tr>
-<tr><th>タグ</th><td>GA4 イベント <code>view_promotion</code>、パラメータ <code>promotion_name</code> = <code>{{aev - promo name}}</code></td></tr>
+<tr><th>変数名</th><td>aev - promo name</td></tr>
+<tr><th>変数タイプ</th><td>要素の属性</td></tr>
+<tr><th>属性名</th><td><code>data-promo-name</code></td></tr>
 </tbody></table></div>
-<p>ここではバナーそのものに属性があるので、自動イベント変数で足ります。</p>
+<p><strong>トリガー</strong>: <span class="ui-path"><span>トリガー</span><span>新規</span><span>要素の表示</span></span></p>
+<div class="table-wrap"><table class="form-table"><tbody>
+<tr><th>トリガー名</th><td>Vis - promo-banner</td></tr>
+<tr><th>選択方法</th><td>CSS セレクタ ／ <code>#promo-banner</code></td></tr>
+<tr><th>このトリガーを起動するタイミング</th><td>1ページにつき1度</td></tr>
+<tr><th>詳細 › 視認の最小割合</th><td><code>50</code><br><small>数字だけを入れる。「%」を付けると保存できない</small></td></tr>
+</tbody></table></div>
+<p><strong>タグ</strong>: <span class="ui-path"><span>タグ</span><span>新規</span><span>Google アナリティクス: GA4 イベント</span></span></p>
+<div class="table-wrap"><table class="form-table"><tbody>
+<tr><th>タグ名</th><td>GA4 - view_promotion</td></tr>
+<tr><th>測定 ID</th><td><code>G-FEHSK6QJLE</code></td></tr>
+<tr><th>イベント名</th><td><code>view_promotion</code></td></tr>
+<tr><th>イベント パラメータ</th><td><code>promotion_name</code> = <code>{{aev - promo name}}</code></td></tr>
+<tr><th>トリガー</th><td>Vis - promo-banner</td></tr>
+</tbody></table></div>
+<p>ここではバナーそのものに属性があり子要素を気にしなくてよいので、カスタム JavaScript ではなく自動イベント変数で足ります。</p>
 <label class="check"><input type="checkbox" id="c-vis"> スクロールしてバナーを表示し、view_promotion の発火を確認した</label></li>
 </ol>
 
 <h2 id="publish">公開して GA4 で確認する</h2>
 <ol class="steps">
 <li><h4>公開する</h4>
-<p>右上の「公開」を押し、バージョン名（例: <code>v1 cta_click / ui_click / ecommerce</code>）と、何を追加したかの説明を書いて公開します。これでプレビューに接続していない普通の訪問でもタグが動きます。</p>
+<p>右上の「公開」を押し、バージョン名と説明を書いて公開します。これでプレビューに接続していない普通の訪問でもタグが動きます。</p>
+<div class="table-wrap"><table class="form-table"><tbody>
+<tr><th>バージョン名</th><td><code>v1 初期設定（Google タグと04章の練習用イベント）</code><br><small>一覧で見分けるために短く。2回目以降は <code>v2 ui_click に click_url を追加</code> のように、その版で変えたことを書く</small></td></tr>
+<tr><th>説明</th><td>Google タグ（tag_source=gtm）<br>方式A: cta_click / sign_up / add_to_cart<br>方式B: ui_click（data属性で判定）<br>発展: generate_lead / view_promotion</td></tr>
+</tbody></table></div>
 <p>公開した版は <span class="ui-path"><span>バージョン</span></span> に残り、いつでも前の版に戻せます。</p>
 <label class="check"><input type="checkbox" id="p-publish"> 公開した</label></li>
 
 <li><h4>GA4 のリアルタイムで確かめる</h4>
-<p>プレビューを切った状態で gtm.html を開き、各ボタンを押します。GA4 のリアルタイムの「イベント数（イベント名）」に <code>cta_click</code>、<code>ui_click</code>、<code>add_to_cart</code> が出ます。<code>cta_click</code> を押すと、パラメータに <code>cta_name</code> と <code>tag_source</code> が見えるはずです。</p>
+<p>Tag Assistant のタブを閉じ、プレビューに接続していない普通のタブで gtm.html を開いて各ボタンを押します。GA4 のリアルタイムの「イベント数（イベント名）」に <code>cta_click</code>、<code>sign_up</code>、<code>add_to_cart</code>、<code>ui_click</code>、<code>generate_lead</code>、<code>view_promotion</code> が出ます。<code>cta_click</code> を押すと、パラメータに <code>cta_name</code> と <code>tag_source</code> が見えます。</p>
+<p>出てこないときは、次の順に確かめます。</p>
+<ul>
+<li><strong>カードの下に隠れていないか</strong>。件数の多い順に並ぶので、下までスクロールするか次のページを見る。</li>
+<li><strong>ブラウザから送れているか</strong>。開発者ツールの「ネットワーク」で <code>collect</code> と絞り込み、<code>en=cta_click</code> を含むリクエストが出ているか見る。出ていなければ広告ブロッカーなどが止めている。</li>
+<li><strong>公開できているか</strong>。GTM の「バージョン」に今回の版があり、「公開中」になっているか見る。</li>
+</ul>
 <label class="check"><input type="checkbox" id="p-realtime"> GA4 のリアルタイムで GTM 経由のイベントを確認した</label></li>
 
 <li><h4>カスタムディメンションを登録する</h4>
-<p>02章と同じ手順で、イベントスコープの <code>cta_name</code>、<code>cta_position</code>、<code>click_name</code>、<code>tag_source</code> を登録します。翌日以降、探索で「タグの出どころ（tag_source） × イベント名」の表を作ると、gtag.js 経由と GTM 経由のデータを見分けられます。</p>
+<p>02章と同じ手順で、<span class="ui-path"><span>管理</span><span>データの表示</span><span>カスタム定義</span></span> の「カスタム ディメンションを作成」から次の4つを登録します。範囲はすべて「イベント」です。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>ディメンション名</th><th>イベント パラメータ</th><th>説明</th></tr></thead>
+<tbody>
+<tr><td>CTA名</td><td><code>cta_name</code></td><td>cta_click で押された CTA ボタンの名前（資料請求 など）</td></tr>
+<tr><td>CTA位置</td><td><code>cta_position</code></td><td>cta_click のボタンが置かれている場所（hero / footer）</td></tr>
+<tr><td>クリック名</td><td><code>click_name</code></td><td>ui_click で押された要素の data-track-name（pricing_pro など）</td></tr>
+<tr><td>タグの出どころ</td><td><code>tag_source</code></td><td>GTM 経由のイベントに付く値（gtm）。gtag.js 直書きの index.html では空</td></tr>
+</tbody></table></div>
+<p>ディメンション名は必須で、日本語でかまいません。イベント パラメータはコードのキーと完全一致させます。<code>method</code> と <code>form_id</code> は登録が要りません。<code>method</code> は既定ディメンション、<code>form_id</code> は02章で登録済みです。</p>
+<p>翌日以降、探索で「タグの出どころ × イベント名」の表を作ると、gtag.js 経由と GTM 経由のデータを見分けられます。</p>
 <label class="check"><input type="checkbox" id="p-dims"> GTM で追加したパラメータを登録した</label></li>
 
-<li><h4>翌日 BigQuery で確かめる</h4>
+<li><h4>BigQuery で確かめる</h4>
 <p>BigQuery では登録しなくてもすべてのパラメータが見えます。06章のレシピ「gtag.js と GTM の比較」で、<code>tag_source</code> ごとのイベント数を数えます。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>エクスポートの頻度</th><th>見られる時期</th><th>テーブル</th></tr></thead>
+<tbody>
+<tr><td>ストリーミング（有料）</td><td>当日。送信から数分後</td><td><code>events_intraday_YYYYMMDD</code></td></tr>
+<tr><td>毎日（無料）</td><td>翌日</td><td><code>events_YYYYMMDD</code></td></tr>
+</tbody></table></div>
+<p>当日分は、06章のレシピ9のように <code>events_intraday_*</code> を指定します。「does not match any table」と出たらストリーミングがオフなので、翌日を待つか、<span class="ui-path"><span>管理</span><span>サービス間のリンク設定</span><span>BigQuery のリンク</span></span> で頻度に「ストリーミング」を加えます。画面上部の検索欄に「BigQuery」と入れても開けます。</p>
 <label class="check"><input type="checkbox" id="p-bq"> BigQuery で tag_source = gtm の行を確認した</label></li>
 </ol>
 <nav class="pager" aria-label="前後の章">
