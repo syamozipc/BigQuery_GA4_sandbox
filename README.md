@@ -1,11 +1,11 @@
-# BigQuery × GA4 サンドボックス
+# GA4・GTM・BigQuery サンドボックス
 
 GA4・GTM・BigQuery を包括的に学ぶためのリポジトリ。
 テストサイトに計測を仕込み、GA4 の画面で見て、GTM で計測を管理し、BigQuery に流し込んで SQL で分析・可視化するまでを、手を動かしながら一通り学べるようにしている。
 
 ## 📚 学習ガイド
 
-学習ガイド（HTML）: https://syamozipc.github.io/BigQuery_GA4_sandbox/docs/
+学習ガイド（HTML）: https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/docs/
 <br />
 ローカルで読む場合は [docs/index.html](docs/index.html) を開く（`python3 -m http.server 8000` → http://localhost:8000/docs/）。
 
@@ -32,10 +32,10 @@ GA4・GTM・BigQuery を包括的に学ぶためのリポジトリ。
 
 | 役割 | ページ | 何をするか | 使う章 |
 | --- | --- | --- | --- |
-| 送る | [テストサイト（gtag.js）](https://syamozipc.github.io/BigQuery_GA4_sandbox/) `index.html` | gtag.js 直書きでイベントを送る。仮ユーザーの切り替え付き | 01・02 |
-| 送る | [GTM 練習ページ](https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html) `gtm.html` | GTM 経由でイベントを送る。dataLayer の中身を表示 | 03・04 |
-| 見る | [BigQuery ダッシュボード](https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html) `dashboard.html` | BigQuery の生データを SQL で集計。実行した SQL と処理量も表示 | 05〜07 |
-| 見る | [リアルタイム ダッシュボード](https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html) `realtime.html` | GA4 Data API で過去30分を集計。送ったリクエストも表示 | 07 |
+| 送る | [テストサイト（gtag.js）](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/) `index.html` | gtag.js 直書きでイベントを送る。仮ユーザーの切り替え付き | 01・02 |
+| 送る | [GTM 練習ページ](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html) `gtm.html` | GTM 経由でイベントを送る。dataLayer の中身を表示 | 03・04 |
+| 見る | [BigQuery ダッシュボード](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html) `dashboard.html` | BigQuery の生データを SQL で集計。実行した SQL と処理量も表示 | 05〜07 |
+| 見る | [リアルタイム ダッシュボード](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html) `realtime.html` | GA4 Data API で過去30分を集計。送ったリクエストも表示 | 07 |
 
 ```
 /

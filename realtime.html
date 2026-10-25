@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>リアルタイム ダッシュボード</title>
+    <title>リアルタイム ダッシュボード | GA4・GTM・BigQuery サンドボックス</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
@@ -315,7 +315,7 @@
   </head>
   <body>
     <div class="site-nav" role="navigation" aria-label="サイト内のページ">
-      <span class="site-brand">GA4 サンドボックス</span>
+      <span class="site-brand">GA4・GTM・BigQuery サンドボックス</span>
       <span class="site-group">送る</span>
       <a href="./">テストサイト（gtag.js）</a>
       <a href="./gtm.html">GTM 練習ページ</a>
@@ -384,7 +384,7 @@
         <section class="card">
           <h2>ページ別</h2>
           <p class="note">
-            リアルタイムの API ではイベントスコープの <code>tag_source</code> が使えないので、ページで送信元を見分けます。「GTM 練習ページ」は GTM 経由、それ以外は gtag.js です。
+            リアルタイムの API ではイベントスコープの <code>tag_source</code> が使えないので、ページで送信元を見分けます。「GTM 練習ページ」で始まる行は GTM 経由、「テストサイト（gtag.js）」で始まる行は gtag.js です。
           </p>
           <div class="table-wrap" id="tbl-pages"></div>
           <details class="req"><summary>送ったリクエストを見る</summary><pre id="req-pages"></pre></details>

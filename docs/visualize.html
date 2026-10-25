@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>07 可視化とAPI | GA4・GTM・BigQuery 学習ガイド</title>
+<title>07 可視化とAPI | GA4・GTM・BigQuery サンドボックス</title>
 <meta name="claude:viewport-fit-sides" content="cover" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,7 +13,7 @@
 <body>
 <div class="shell" data-page-id="visualize">
 <aside class="side">
-<a class="brand" href="index.html">GA4・GTM・BigQuery<small>学習ガイド</small></a>
+<a class="brand" href="index.html">GA4・GTM・BigQuery サンドボックス<small>学習ガイド</small></a>
 <nav class="chapters" aria-label="章">
 <a data-page="index" href="index.html"><span class="no">00</span><span>全体像とロードマップ</span></a>
 <p class="group">GA4</p>
@@ -27,7 +27,7 @@
 <a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
 <a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
 </nav>
-<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
+<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
 </aside>
 <main>
 <div class="content">
@@ -110,7 +110,7 @@ client.requestAccessToken();</code></pre></li>
 <p>ログインした人の権限で動くので、BigQuery や GA4 の閲覧権限がない人には何も表示されません。誰でも見られる画面にしたいときは、サーバー側でサービスアカウントを使って API を呼び、結果だけを返す構成にします。</p></div>
 
 <h2 id="dashboard">BigQuery ダッシュボード（BigQuery API）</h2>
-<p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">BigQuery ダッシュボード</a>（dashboard.html）は、BigQuery REST API の <code>jobs.query</code> に SQL を投げ、返ってきた行を Chart.js でグラフにしています。表示しているのは日次テーブルのデータで、ストリーミングが有効なら今日の分（<code>events_intraday_</code>）も含められます。</p>
+<p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html">BigQuery ダッシュボード</a>（dashboard.html）は、BigQuery REST API の <code>jobs.query</code> に SQL を投げ、返ってきた行を Chart.js でグラフにしています。表示しているのは日次テーブルのデータで、ストリーミングが有効なら今日の分（<code>events_intraday_</code>）も含められます。</p>
 <p>画面のカードは06章のレシピに対応しています。送信元の比較（gtag.js と GTM）、プラン別、イベント別、パラメータの値、ファネル、ユーザーの行動履歴です。各カードの「実行した SQL を見る」で、実際に投げた SQL と処理量が確かめられます。</p>
 <pre data-lang="javascript"><code>const res = await fetch(
   `https://bigquery.googleapis.com/bigquery/v2/projects/${PROJECT_ID}/queries`,
@@ -123,11 +123,11 @@ client.requestAccessToken();</code></pre></li>
 const data = await res.json();
 <span class="c">// data.rows = [{ f: [{ v: "12" }, { v: "34" }] }, …]  列の順に値が入る</span></code></pre>
 <p>レスポンスの行は <code>rows[i].f[j].v</code> という形で、値はすべて文字列です。数値として使うときは <code>Number()</code> で変換します。KPI のセッション数は、06章のレシピ4と同じ SQL で数えています。</p>
-<label class="check"><input type="checkbox" id="db-open"> dashboard.html にログインし、期間を変えて表示が変わるのを確認した</label>
-<label class="check"><input type="checkbox" id="db-sql"> dashboard.html のソースで KPI の SQL を読み、06章のレシピと対応づけた</label>
+<label class="check"><input type="checkbox" id="db-open"> BigQuery ダッシュボードにログインし、期間を変えて表示が変わるのを確認した</label>
+<label class="check"><input type="checkbox" id="db-sql"> 各カードの「実行した SQL を見る」で SQL を読み、06章のレシピと対応づけた</label>
 
 <h2 id="realtime">リアルタイム ダッシュボード（GA4 Data API）</h2>
-<p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム ダッシュボード</a>（realtime.html）では、ページ別・イベント別・プラン別・パターン別・ユーザー別の表を出し、ユーザーを選ぶとすべてのカードがその人に絞られます。各カードの「送ったリクエストを見る」でリクエストの中身が、画面上部で1日のクォータの残りが確かめられます。</p>
+<p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html">リアルタイム ダッシュボード</a>（realtime.html）では、ページ別・イベント別・プラン別・パターン別・ユーザー別の表を出し、ユーザーを選ぶとすべてのカードがその人に絞られます。各カードの「送ったリクエストを見る」でリクエストの中身が、画面上部で1日のクォータの残りが確かめられます。</p>
 <p>GA4 の画面のリアルタイムは、過去30分固定・カード固定で、任意のディメンションと指標の組み合わせやセグメントは使えません。Data API の <code>runRealtimeReport</code> を直接呼ぶと、過去30分のデータを好きな組み合わせで取れます。無料です。</p>
 <pre data-lang="javascript"><code><span class="c">// ユーザースコープのカスタムディメンションは customUser: を付けて参照する</span>
 const res = await fetch(
@@ -161,7 +161,7 @@ const res = await fetch(
 <li><strong>認証</strong>: ブラウザ直叩きはログインした人の権限になります。</li>
 </ul>
 <p>集計や傾向を見るなら API で十分です。特定ユーザーの行動履歴を業務画面に正確に出したいなら、しきい値と <code>(other)</code> で欠けるので、BigQuery エクスポートか自社DBの方が確実です。</p>
-<label class="check"><input type="checkbox" id="rt-open"> realtime.html でパターンを切り替えながら、ユーザー別の数値が動くのを確認した</label>
+<label class="check"><input type="checkbox" id="rt-open"> テストサイトでパターンを切り替えながら、リアルタイム ダッシュボードのユーザー別の数値が動くのを確認した</label>
 <label class="check"><input type="checkbox" id="rt-custom"> runRealtimeReport のディメンションを <code>customUser:plan</code> に変えて、プラン別の人数を取得した</label>
 
 <h2 id="next">ひと通り終えたら</h2>

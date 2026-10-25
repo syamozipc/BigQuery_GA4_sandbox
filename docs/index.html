@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>GA4・GTM・BigQuery 学習ガイド</title>
+<title>GA4・GTM・BigQuery サンドボックス 学習ガイド</title>
 <meta name="claude:viewport-fit-sides" content="cover" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,7 +13,7 @@
 <body>
 <div class="shell" data-page-id="index">
 <aside class="side">
-<a class="brand" href="index.html">GA4・GTM・BigQuery<small>学習ガイド</small></a>
+<a class="brand" href="index.html">GA4・GTM・BigQuery サンドボックス<small>学習ガイド</small></a>
 <nav class="chapters" aria-label="章">
 <a data-page="index" href="index.html"><span class="no">00</span><span>全体像とロードマップ</span></a>
 <p class="group">GA4</p>
@@ -27,12 +27,12 @@
 <a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
 <a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
 </nav>
-<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
+<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
 </aside>
 <main>
 <div class="content">
 <div class="kicker"><span class="chip">00</span><span class="chip t-ga4">GA4</span><span class="chip t-gtm">GTM</span><span class="chip t-bq">BigQuery</span></div>
-<h1>GA4・GTM・BigQuery 学習ガイド</h1>
+<h1>GA4・GTM・BigQuery サンドボックス 学習ガイド</h1>
 <p class="lead">Webサイトに計測を仕込み、GA4の画面で見て、GTMで計測を管理し、BigQueryでSQL分析するまでを、このリポジトリのテストサイトで手を動かしながら一通り学ぶための教材です。</p>
 
 <div class="toc"><p>このページの内容</p><ol>
@@ -147,10 +147,10 @@
 <div class="table-wrap"><table>
 <thead><tr><th>役割</th><th>ページ</th><th>何をするか</th><th>使う章</th></tr></thead>
 <tbody>
-<tr><td class="num" style="text-align:left">送る</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><br><code>index.html</code></td><td>gtag.js 直書きでイベントを送る。仮ユーザーを切り替えて user_id と user_properties も送る</td><td>01・02章</td></tr>
-<tr><td class="num" style="text-align:left">送る</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><br><code>gtm.html</code></td><td>GTM 経由でイベントを送る。dataLayer の中身をその場で表示する</td><td>03・04章</td></tr>
-<tr><td class="num" style="text-align:left">見る</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">BigQuery ダッシュボード</a><br><code>dashboard.html</code></td><td>BigQuery の生データを SQL で集計する。実行した SQL と処理量も見られる</td><td>05〜07章</td></tr>
-<tr><td class="num" style="text-align:left">見る</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム ダッシュボード</a><br><code>realtime.html</code></td><td>GA4 Data API で過去30分を集計する。送ったリクエストも見られる</td><td>07章</td></tr>
+<tr><td class="num" style="text-align:left">送る</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">テストサイト（gtag.js）</a><br><code>index.html</code></td><td>gtag.js 直書きでイベントを送る。仮ユーザーを切り替えて user_id と user_properties も送る</td><td>01・02章</td></tr>
+<tr><td class="num" style="text-align:left">送る</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html">GTM 練習ページ</a><br><code>gtm.html</code></td><td>GTM 経由でイベントを送る。dataLayer の中身をその場で表示する</td><td>03・04章</td></tr>
+<tr><td class="num" style="text-align:left">見る</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html">BigQuery ダッシュボード</a><br><code>dashboard.html</code></td><td>BigQuery の生データを SQL で集計する。実行した SQL と処理量も見られる</td><td>05〜07章</td></tr>
+<tr><td class="num" style="text-align:left">見る</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html">リアルタイム ダッシュボード</a><br><code>realtime.html</code></td><td>GA4 Data API で過去30分を集計する。送ったリクエストも見られる</td><td>07章</td></tr>
 </tbody></table></div>
 <p>上の「データの流れ」の図の左端が「送る」ページ、右端が「見る」ページに当たります。</p>
 
