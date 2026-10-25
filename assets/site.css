@@ -1,5 +1,5 @@
-/* サイト共通: メニューと見出しの帯（index / send-gtag / send-gtm / analytics で共有）
-   各ページの <style> より後に読み込み、見出しの帯の高さと文字サイズをそろえる */
+/* サイト共通: メニューとページ見出し（index / send-gtag / send-gtm / analytics で共有）
+   各ページの <style> より後に読み込み、ページ見出しの文字サイズをそろえる */
 
 [hidden] {
   display: none !important;
@@ -59,17 +59,18 @@ body {
   border: 1px solid #42526e;
 }
 
-/* 見出しの帯 */
+/* ページ見出し（帯にはせず、メニューの下に置く）
+   幅は各ページの本文に合わせて --page-width / --page-gutter で指定する */
 header {
-  background: #2f5bb0;
-  color: #fff;
-  min-height: 92px;
-  padding: 18px max(16px, 3vw);
+  max-width: var(--page-width, 1240px);
+  margin: 0 auto;
+  padding: 24px var(--page-gutter, max(16px, 3vw)) 0;
   display: flex;
   flex-wrap: wrap;
   gap: 12px 24px;
   align-items: center;
   justify-content: space-between;
+  color: #1c2738;
 }
 header h1 {
   font-size: 22px;
@@ -80,7 +81,7 @@ header h1 {
 header p {
   font-size: 13px;
   line-height: 1.6;
-  opacity: 0.9;
+  color: #5b6b82;
   margin: 4px 0 0;
 }
 header nav {
@@ -99,6 +100,6 @@ header nav button {
   font-weight: 700;
   padding: 6px 12px;
   border-radius: 8px;
-  border: none;
+  border: 1px solid #c9d4e6;
   cursor: pointer;
 }
