@@ -27,7 +27,7 @@
 <a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
 <a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
 </nav>
-<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
+<div class="side-links"><p>サイト</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">トップ</a><p>データを送る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtag.html">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtm.html">GTM 練習ページ</a><p>データを見る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/analytics.html">分析</a></div>
 </aside>
 <main>
 <div class="content">
@@ -296,7 +296,7 @@ FROM steps;</code></pre>
 <p>04章で GTM の Google タグに <code>tag_source = gtm</code> を付けたので、どちらから来たデータかを見分けられます。</p>
 <pre data-lang="sql"><code>SELECT
   IFNULL((SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'tag_source'),
-         'gtag.js（index.html）') AS source,
+         'gtag.js（send-gtag.html）') AS source,
   event_name,
   COUNT(*) AS events
 FROM `big-query-sample-492309.analytics_324810718.events_*`
@@ -307,7 +307,7 @@ ORDER BY source, events DESC;</code></pre>
 <label class="check"><input type="checkbox" id="rc-source"> tag_source ごとのイベント数を出した</label>
 
 <h3>8. e コマースの items を展開する</h3>
-<p>gtm.html の「カートに追加」は <code>items</code> 配列付きで送っています。index.html の <code>add_to_cart</code> は <code>item_name</code> をただのイベントパラメータで送っているので、<code>items</code> は空です。</p>
+<p>send-gtm.html の「カートに追加」は <code>items</code> 配列付きで送っています。send-gtag.html の <code>add_to_cart</code> は <code>item_name</code> をただのイベントパラメータで送っているので、<code>items</code> は空です。</p>
 <pre data-lang="sql"><code>SELECT
   event_name,
   item.item_id,

@@ -27,18 +27,18 @@
 <a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
 <a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
 </nav>
-<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
+<div class="side-links"><p>サイト</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">トップ</a><p>データを送る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtag.html">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtm.html">GTM 練習ページ</a><p>データを見る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/analytics.html">分析</a></div>
 </aside>
 <main>
 <div class="content">
 <div class="kicker"><span class="chip">03</span><span class="chip kind-basic">基礎</span><span class="chip t-gtm">GTM</span></div>
 <h1>GTMの基礎</h1>
-<p class="lead">Google タグマネージャー（GTM）は、計測のコードをページに書く代わりに、管理画面で設定できるようにするツールです。この章では、すでに知っている index.html の gtag コードと対応づけながら仕組みを理解します。</p>
+<p class="lead">Google タグマネージャー（GTM）は、計測のコードをページに書く代わりに、管理画面で設定できるようにするツールです。この章では、すでに知っている send-gtag.html の gtag コードと対応づけながら仕組みを理解します。</p>
 
 <div class="toc"><p>この章の内容</p><ol>
 <li><a href="#what">GTMで何が変わるか</a></li>
 <li><a href="#parts">タグ・トリガー・変数</a></li>
-<li><a href="#mapping">index.html のコードとの対応</a></li>
+<li><a href="#mapping">send-gtag.html のコードとの対応</a></li>
 <li><a href="#datalayer">dataLayer の仕組み</a></li>
 <li><a href="#approach">2つの計測アプローチ</a></li>
 <li><a href="#publish">編集から公開までの流れ</a></li>
@@ -50,7 +50,7 @@
 <h2 id="what">GTMで何が変わるか</h2>
 <p>ページに入れるのは、GTM のコンテナ（<code>GTM-XXXXXXX</code>）を読み込むスニペット1つだけです。「何を・いつ送るか」の設定はすべて GTM の画面で作り、「公開」を押すとサイトに反映されます。</p>
 <div class="table-wrap"><table>
-<thead><tr><th></th><th>gtag.js 直書き（index.html）</th><th>GTM（gtm.html）</th></tr></thead>
+<thead><tr><th></th><th>gtag.js 直書き（send-gtag.html）</th><th>GTM（send-gtm.html）</th></tr></thead>
 <tbody>
 <tr><td>計測を足す・直す</td><td>コードを修正してデプロイ</td><td>GTM の画面で設定して公開</td></tr>
 <tr><td>動作の確認</td><td>DebugView、開発者ツール</td><td>プレビューで、どのタグが動いたかまで見える</td></tr>
@@ -92,10 +92,10 @@
 <figcaption>トリガーの条件を満たしてタグが実行されることを「発火」と呼びます。1つのタグに複数のトリガーを付けたり、1つの変数を複数のタグで使い回したりできます。</figcaption>
 </figure>
 
-<h2 id="mapping">index.html のコードとの対応</h2>
-<p>GTM で GA4 を送る設定は、index.html の gtag コードを GTM の画面で作り直したものです。</p>
+<h2 id="mapping">send-gtag.html のコードとの対応</h2>
+<p>GTM で GA4 を送る設定は、send-gtag.html の gtag コードを GTM の画面で作り直したものです。</p>
 <div class="table-wrap"><table>
-<thead><tr><th>index.html のコード</th><th>役割</th><th>GTM での部品</th></tr></thead>
+<thead><tr><th>send-gtag.html のコード</th><th>役割</th><th>GTM での部品</th></tr></thead>
 <tbody>
 <tr><td><code>gtag("config", "G-FEHSK6QJLE")</code></td><td>最初に1回だけ実行する初期設定。<code>page_view</code> もこれが送る</td><td><strong>Google タグ</strong>（トリガーは Initialization - All Pages）</td></tr>
 <tr><td><code>gtag("event", "button_click", …)</code></td><td>出来事のたびに送る</td><td><strong>GA4 イベントタグ</strong></td></tr>
@@ -104,7 +104,7 @@
 </tbody></table></div>
 <p>GA4 イベントタグは、同じ測定IDの Google タグの設定を引き継ぎます。Google タグに付けたパラメータは、全イベントに付きます。</p>
 <div class="callout warn"><span class="label">二重計測に注意</span>
-<p>index.html のように gtag.js を直書きしたページに、同じ測定IDの Google タグを入れた GTM も置くと、全イベントが2回送られます。このリポジトリでは index.html が gtag.js、gtm.html が GTM と、ページを分けています。</p></div>
+<p>send-gtag.html のように gtag.js を直書きしたページに、同じ測定IDの Google タグを入れた GTM も置くと、全イベントが2回送られます。このリポジトリでは send-gtag.html が gtag.js、send-gtm.html が GTM と、ページを分けています。</p></div>
 
 <h2 id="datalayer">dataLayer の仕組み</h2>
 <p><code>dataLayer</code> はページ内のただの JavaScript 配列です。GTM はこの配列の <code>push</code> を監視していて、オブジェクトが積まれるたびに中身を読み取ります。</p>
@@ -187,7 +187,7 @@ dataLayer.push({ user_plan: "pro" });</code></pre>
 <div class="callout key"><span class="label">使い分けの目安</span>
 <p><strong>お金や成果に関わるイベントは A</strong>（dataLayer）で、エンジニアとマーケ担当が「イベント名とパラメータの仕様書」を合意して実装します。<strong>UI のクリック計測は B'</strong>（data属性）にすると、改修で壊れにくく、GTM 側だけで足し引きできます。<strong>B</strong>（クラス名）は既存サイトにコードを触らず計測を足したいときの手段で、壊れやすいと割り切って使います。</p></div>
 
-<p>04章では、練習用ページ gtm.html で A・B・B' をすべて設定し、「クラス名を変えると B だけが止まる」ことを実際に確かめます。</p>
+<p>04章では、練習用ページ send-gtm.html で A・B・B' をすべて設定し、「クラス名を変えると B だけが止まる」ことを実際に確かめます。</p>
 
 <h2 id="publish">編集から公開までの流れ</h2>
 <ol class="steps">

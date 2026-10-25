@@ -17,10 +17,10 @@ GA4・GTM・BigQuery を包括的に学ぶためのリポジトリ。
 | [01 GA4の基礎](docs/ga4-basics.html) | 基礎 | イベント・パラメータ・ユーザープロパティ、スコープ、user_id / user_properties、gtag.js の導入、画面の見取り図、上限値 |
 | [02 カスタムディメンションを画面で見る](docs/ga4-custom-dimensions.html) | ハンズオン | 実装したパラメータをカスタム定義に登録し、リアルタイム・探索・標準レポートで見る。キーイベント |
 | [03 GTMの基礎](docs/gtm-basics.html) | 基礎 | タグ・トリガー・変数、dataLayer の仕組み、「dataLayer.push 方式」と「クラス名・data属性で拾う方式」の違い |
-| [04 GTMを実際に使う](docs/gtm-tutorial.html) | ハンズオン | [gtm.html](gtm.html) で両方式を設定し、クラス名変更で壊れ方を比べ、公開まで行う |
+| [04 GTMを実際に使う](docs/gtm-tutorial.html) | ハンズオン | [send-gtm.html](send-gtm.html) で両方式を設定し、クラス名変更で壊れ方を比べ、公開まで行う |
 | [05 BigQueryの基礎](docs/bigquery-basics.html) | 基礎 | 列指向・料金・リソース階層、基本操作（挿入・クエリ・インポート/エクスポート）、BigQuery 特有の SQL |
 | [06 GA4データをBigQueryへ](docs/bigquery-export.html) | ハンズオン | エクスポート設定、テーブル構造、UNNEST、SQL レシピ集（パラメータ・ユーザー・セッション・ファネル・GTM比較） |
-| [07 可視化とAPI](docs/visualize.html) | ハンズオン | Looker Studio、dashboard.html（BigQuery API）、realtime.html（GA4 Data API）の仕組みと使い分け |
+| [07 可視化とAPI](docs/visualize.html) | ハンズオン | Looker Studio と、分析ページの2つのタブ（BigQuery API・GA4 Data API）の仕組みと使い分け |
 
 ハンズオンの章にはチェック項目があり、進捗はブラウザに保存されて 00 章のカードに表示される。
 
@@ -28,21 +28,26 @@ GA4・GTM・BigQuery を包括的に学ぶためのリポジトリ。
 
 ## サイトの構成
 
-学習ガイドと4つの練習用ページでできている。練習用ページは、GA4 にデータを **送る** 2ページと、届いたデータを **見る** 2ページに分かれる。どのページも上部の共通メニューで行き来できる。
+トップページ・練習用のページ・学習ガイドでできている。練習用のページは、GA4 にデータを **送る** 2ページと、届いたデータを **見る** 分析ページに分かれる。どのページも上部の共通メニューで行き来できる。
+
+公開URL: https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/
 
 | 役割 | ページ | 何をするか | 使う章 |
 | --- | --- | --- | --- |
-| 送る | [テストサイト（gtag.js）](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/) `index.html` | gtag.js 直書きでイベントを送る。仮ユーザーの切り替え付き | 01・02 |
-| 送る | [GTM 練習ページ](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html) `gtm.html` | GTM 経由でイベントを送る。dataLayer の中身を表示 | 03・04 |
-| 見る | [BigQuery ダッシュボード](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html) `dashboard.html` | BigQuery の生データを SQL で集計。実行した SQL と処理量も表示 | 05〜07 |
-| 見る | [リアルタイム ダッシュボード](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html) `realtime.html` | GA4 Data API で過去30分を集計。送ったリクエストも表示 | 07 |
+| 入口 | [トップ](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/) `index.html` | 送る・見る・学ぶの入口 | — |
+| 送る | [テストサイト（gtag.js）](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtag.html) `send-gtag.html` | gtag.js 直書きでイベントを送る。仮ユーザーの切り替え付き | 01・02 |
+| 送る | [GTM 練習ページ](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtm.html) `send-gtm.html` | GTM 経由でイベントを送る。dataLayer の中身を表示 | 03・04 |
+| 見る | [分析](https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/analytics.html) `analytics.html` | 「リアルタイム」タブ（GA4 Data API・過去30分）と「過去の推移」タブ（BigQuery・日別）。要ログイン | 05〜07 |
+
+ログインは分析ページで行い、BigQuery と GA4 の読み取り権限をまとめて1回で取る。アクセストークンはページの中の変数にだけ持ち、保存しない（移動・再読み込みでログインし直す）。トップと分析ページには計測のスクリプトを入れていないので、開いてもデータは増えない。
 
 ```
 /
-├── index.html        # 送る: テストサイト（gtag.js）
-├── gtm.html          # 送る: GTM 練習ページ（GTM-KXV4CBBD）
-├── dashboard.html    # 見る: BigQuery ダッシュボード
-├── realtime.html     # 見る: リアルタイム ダッシュボード
+├── index.html        # 入口: トップ
+├── send-gtag.html    # 送る: テストサイト（gtag.js）
+├── send-gtm.html     # 送る: GTM 練習ページ（GTM-KXV4CBBD）
+├── analytics.html    # 見る: 分析（リアルタイム / 過去の推移）
+├── assets/           # サイト共通の CSS（site.css）とログイン（auth.js）
 └── docs/             # 学習ガイド（00〜07章）
     └── assets/       # ガイド共通の CSS / JS
 ```
@@ -54,9 +59,9 @@ GA4・GTM・BigQuery を包括的に学ぶためのリポジトリ。
 | BigQuery | https://console.cloud.google.com/bigquery?project=big-query-sample-492309 |
 | Looker Studio | https://lookerstudio.google.com/reporting/3da2a9b6-1aa5-4c50-b2c1-fafaf4a64cdc/page/zB4BG |
 
-### gtm.html の使い方
+### send-gtm.html の使い方
 
-GTM コンテナ `GTM-KXV4CBBD` を読み込む。別のコンテナで試すときは、`gtm.html` の `window.GTM_ID` と、`<body>` 直後の noscript の `id=` の2か所を書き換える。
+GTM コンテナ `GTM-KXV4CBBD` を読み込む。別のコンテナで試すときは、`send-gtm.html` の `window.GTM_ID` と、`<body>` 直後の noscript の `id=` の2か所を書き換える。
 
 右側に dataLayer の中身がリアルタイムで表示されるので、ボタンを押したときに何が積まれるかを見ながら GTM を設定できる。
 

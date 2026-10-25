@@ -1,0 +1,104 @@
+/* サイト共通: メニューと見出しの帯（index / send-gtag / send-gtm / analytics で共有）
+   各ページの <style> より後に読み込み、見出しの帯の高さと文字サイズをそろえる */
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif;
+}
+
+/* メニュー */
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  background: #1c2738;
+  padding: 8px max(16px, 3vw);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.site-nav a {
+  color: #c9d4e6;
+  text-decoration: none;
+  padding: 3px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.site-nav a:hover {
+  background: #2c3a52;
+  color: #fff;
+}
+.site-nav a[aria-current="page"] {
+  background: #fff;
+  color: #1c2738;
+  font-weight: 700;
+}
+.site-nav .site-brand {
+  color: #fff;
+  font-weight: 700;
+  margin-right: 6px;
+  padding-left: 0;
+}
+.site-nav .site-brand[aria-current="page"] {
+  background: none;
+  color: #fff;
+  padding-left: 0;
+}
+.site-nav .site-group {
+  color: #8a9ab4;
+  font-size: 12px;
+  margin-left: 10px;
+  padding-left: 14px;
+  border-left: 1px solid #42526e;
+}
+.site-nav .site-guide {
+  margin-left: auto;
+  border: 1px solid #42526e;
+}
+
+/* 見出しの帯 */
+header {
+  background: #2f5bb0;
+  color: #fff;
+  min-height: 92px;
+  padding: 18px max(16px, 3vw);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: center;
+  justify-content: space-between;
+}
+header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0;
+}
+header p {
+  font-size: 13px;
+  line-height: 1.6;
+  opacity: 0.9;
+  margin: 4px 0 0;
+}
+header nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 13px;
+}
+header nav a,
+header nav button {
+  background: #fff;
+  color: #2f5bb0;
+  text-decoration: none;
+  font: inherit;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}

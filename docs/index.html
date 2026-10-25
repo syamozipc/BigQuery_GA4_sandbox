@@ -27,7 +27,7 @@
 <a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
 <a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
 </nav>
-<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
+<div class="side-links"><p>サイト</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">トップ</a><p>データを送る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtag.html">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtm.html">GTM 練習ページ</a><p>データを見る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/analytics.html">分析</a></div>
 </aside>
 <main>
 <div class="content">
@@ -52,11 +52,11 @@
 <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="head"/></marker>
 </defs>
 <rect class="box" x="20" y="56" width="170" height="80" rx="8"/>
-<text class="t" x="105" y="86" text-anchor="middle">index.html</text>
+<text class="t" x="105" y="86" text-anchor="middle">send-gtag.html</text>
 <text class="s" x="105" y="106" text-anchor="middle">gtag.js を直書き</text>
 <text class="sm" x="105" y="124" text-anchor="middle">gtag('event', …)</text>
 <rect class="box" x="20" y="196" width="170" height="80" rx="8"/>
-<text class="t" x="105" y="226" text-anchor="middle">gtm.html</text>
+<text class="t" x="105" y="226" text-anchor="middle">send-gtm.html</text>
 <text class="s" x="105" y="246" text-anchor="middle">GTM コンテナ</text>
 <text class="sm" x="105" y="264" text-anchor="middle">dataLayer.push(…)</text>
 
@@ -85,11 +85,11 @@
 
 <rect class="box" x="880" y="126" width="120" height="80" rx="8"/>
 <text class="t" x="940" y="156" text-anchor="middle">Looker Studio</text>
-<text class="sm" x="940" y="176" text-anchor="middle">dashboard</text>
-<text class="sm" x="940" y="194" text-anchor="middle">.html</text>
+<text class="sm" x="940" y="176" text-anchor="middle">analytics.html</text>
+<text class="s" x="940" y="194" text-anchor="middle">過去の推移</text>
 <rect class="box" x="880" y="238" width="120" height="80" rx="8"/>
-<text class="t" x="940" y="268" text-anchor="middle">realtime</text>
-<text class="t" x="940" y="286" text-anchor="middle">.html</text>
+<text class="sm" x="940" y="268" text-anchor="middle">analytics.html</text>
+<text class="s" x="940" y="286" text-anchor="middle">リアルタイム</text>
 
 <path class="edge" d="M190 96 C215 96 215 156 238 156" marker-end="url(#ah)"/>
 <text class="el" x="196" y="86">gtag()</text>
@@ -136,30 +136,31 @@
 <a class="card" href="ga4-basics.html"><div class="top"><span class="no">01</span><span class="chip kind-basic">基礎</span><span class="chip t-ga4">GA4</span></div><h3>GA4の基礎</h3><p>イベント・パラメータ・ユーザープロパティというデータモデル、スコープ、ユーザー識別、画面の見取り図、上限値。</p><span class="prog" data-progress="ga4-basics"></span></a>
 <a class="card" href="ga4-custom-dimensions.html"><div class="top"><span class="no">02</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-ga4">GA4</span></div><h3>カスタムディメンションを画面で見る</h3><p>実装で追加したパラメータを登録し、リアルタイム・探索・標準レポートで見えるようにする。</p><span class="prog" data-progress="ga4-custom-dimensions"></span></a>
 <a class="card" href="gtm-basics.html"><div class="top"><span class="no">03</span><span class="chip kind-basic">基礎</span><span class="chip t-gtm">GTM</span></div><h3>GTMの基礎</h3><p>タグ・トリガー・変数、dataLayer の仕組み、「dataLayer.push 方式」と「画面でクリックを拾う方式」の違い。</p><span class="prog" data-progress="gtm-basics"></span></a>
-<a class="card" href="gtm-tutorial.html"><div class="top"><span class="no">04</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-gtm">GTM</span></div><h3>GTMを実際に使う</h3><p>練習用ページ gtm.html で、dataLayer 方式とクラス名・data属性方式の両方を設定し、プレビューから公開まで行う。</p><span class="prog" data-progress="gtm-tutorial"></span></a>
+<a class="card" href="gtm-tutorial.html"><div class="top"><span class="no">04</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-gtm">GTM</span></div><h3>GTMを実際に使う</h3><p>練習用ページ send-gtm.html で、dataLayer 方式とクラス名・data属性方式の両方を設定し、プレビューから公開まで行う。</p><span class="prog" data-progress="gtm-tutorial"></span></a>
 <a class="card" href="bigquery-basics.html"><div class="top"><span class="no">05</span><span class="chip kind-basic">基礎</span><span class="chip t-bq">BigQuery</span></div><h3>BigQueryの基礎</h3><p>列指向・課金の仕組み・リソース階層、基本操作（挿入・クエリ・インポート/エクスポート）、BigQuery 特有の SQL。</p><span class="prog" data-progress="bigquery-basics"></span></a>
 <a class="card" href="bigquery-export.html"><div class="top"><span class="no">06</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-bq">BigQuery</span></div><h3>GA4データをBigQueryへ</h3><p>エクスポートの設定、テーブル構造、UNNEST を使った SQL レシピ集（パラメータ・ユーザー・セッション・ファネル）。</p><span class="prog" data-progress="bigquery-export"></span></a>
-<a class="card" href="visualize.html"><div class="top"><span class="no">07</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-bq">BigQuery</span><span class="chip t-ga4">GA4</span></div><h3>可視化とAPI</h3><p>Looker Studio、BigQuery API で作る dashboard.html、GA4 Data API で作る realtime.html の仕組みと使い分け。</p><span class="prog" data-progress="visualize"></span></a>
+<a class="card" href="visualize.html"><div class="top"><span class="no">07</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-bq">BigQuery</span><span class="chip t-ga4">GA4</span></div><h3>可視化とAPI</h3><p>Looker Studio と、分析ページの2つのタブ（BigQuery API・GA4 Data API）の仕組みと使い分け。</p><span class="prog" data-progress="visualize"></span></a>
 </div>
 
 <h2 id="repo">サイトの構成</h2>
-<p>このサイトは、学習ガイドと4つの練習用ページでできています。練習用ページは、GA4 にデータを<strong>送る</strong>2ページと、届いたデータを<strong>見る</strong>2ページに分かれます。どのページも、上部の共通メニューで行き来できます。</p>
+<p>このサイトは、トップページ・練習用のページ・学習ガイドでできています。練習用のページは、GA4 にデータを<strong>送る</strong>2ページと、届いたデータを<strong>見る</strong>分析ページに分かれます。どのページも、上部の共通メニューで行き来できます。</p>
 <div class="table-wrap"><table>
 <thead><tr><th>役割</th><th>ページ</th><th>何をするか</th><th>使う章</th></tr></thead>
 <tbody>
-<tr><td class="num" style="text-align:left">送る</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">テストサイト（gtag.js）</a><br><code>index.html</code></td><td>gtag.js 直書きでイベントを送る。仮ユーザーを切り替えて user_id と user_properties も送る</td><td>01・02章</td></tr>
-<tr><td class="num" style="text-align:left">送る</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html">GTM 練習ページ</a><br><code>gtm.html</code></td><td>GTM 経由でイベントを送る。dataLayer の中身をその場で表示する</td><td>03・04章</td></tr>
-<tr><td class="num" style="text-align:left">見る</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html">BigQuery ダッシュボード</a><br><code>dashboard.html</code></td><td>BigQuery の生データを SQL で集計する。実行した SQL と処理量も見られる</td><td>05〜07章</td></tr>
-<tr><td class="num" style="text-align:left">見る</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html">リアルタイム ダッシュボード</a><br><code>realtime.html</code></td><td>GA4 Data API で過去30分を集計する。送ったリクエストも見られる</td><td>07章</td></tr>
+<tr><td class="num" style="text-align:left">入口</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">トップ</a><br><code>index.html</code></td><td>送る・見る・学ぶの入口</td><td>—</td></tr>
+<tr><td class="num" style="text-align:left">送る</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtag.html">テストサイト（gtag.js）</a><br><code>send-gtag.html</code></td><td>gtag.js 直書きでイベントを送る。仮ユーザーを切り替えて user_id と user_properties も送る</td><td>01・02章</td></tr>
+<tr><td class="num" style="text-align:left">送る</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtm.html">GTM 練習ページ</a><br><code>send-gtm.html</code></td><td>GTM 経由でイベントを送る。dataLayer の中身をその場で表示する</td><td>03・04章</td></tr>
+<tr><td class="num" style="text-align:left">見る</td><td><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/analytics.html">分析</a><br><code>analytics.html</code></td><td>「リアルタイム」タブは GA4 Data API で過去30分、「過去の推移」タブは BigQuery で日別に集計する。送ったリクエストや実行した SQL も見られる。開くたびにログインする</td><td>05〜07章</td></tr>
 </tbody></table></div>
-<p>上の「データの流れ」の図の左端が「送る」ページ、右端が「見る」ページに当たります。</p>
+<p>上の「データの流れ」の図の左端が「送る」ページ、右端が「見る」分析ページに当たります。トップページと分析ページには計測のスクリプトを入れていないので、開いてもデータは増えません。</p>
 
 <h3>ファイルの配置</h3>
 <pre data-lang="tree"><code>/
-├── index.html        <span class="c"># 送る: テストサイト（gtag.js）</span>
-├── gtm.html          <span class="c"># 送る: GTM 練習ページ（GTM-KXV4CBBD）</span>
-├── dashboard.html    <span class="c"># 見る: BigQuery ダッシュボード</span>
-├── realtime.html     <span class="c"># 見る: リアルタイム ダッシュボード</span>
+├── index.html        <span class="c"># 入口: トップ</span>
+├── send-gtag.html    <span class="c"># 送る: テストサイト（gtag.js）</span>
+├── send-gtm.html     <span class="c"># 送る: GTM 練習ページ（GTM-KXV4CBBD）</span>
+├── analytics.html    <span class="c"># 見る: 分析（リアルタイム / 過去の推移）</span>
+├── assets/           <span class="c"># サイト共通の CSS（site.css）とログイン（auth.js）</span>
 ├── docs/             <span class="c"># 学習ガイド（00〜07章）</span>
 │   └── assets/       <span class="c"># ガイド共通の CSS / JS</span>
 └── README.md         <span class="c"># 入口。各章とページへのリンク</span></code></pre>
@@ -187,8 +188,8 @@
 <tr><td>GCP プロジェクトID</td><td><code>big-query-sample-492309</code></td><td>BigQuery のテーブル参照、API 呼び出し</td></tr>
 <tr><td>データセット</td><td><code>analytics_324810718</code></td><td>GA4 が自動作成。<code>analytics_</code> + プロパティID</td></tr>
 <tr><td>GA4 測定ID</td><td><code>G-FEHSK6QJLE</code></td><td>gtag.js、GTM の Google タグ</td></tr>
-<tr><td>GTM コンテナID</td><td><code>GTM-KXV4CBBD</code></td><td>gtm.html のスニペット</td></tr>
-<tr><td>GA4 プロパティID</td><td><code>324810718</code></td><td>Data API（realtime.html）</td></tr>
+<tr><td>GTM コンテナID</td><td><code>GTM-KXV4CBBD</code></td><td>send-gtm.html のスニペット</td></tr>
+<tr><td>GA4 プロパティID</td><td><code>324810718</code></td><td>Data API（分析ページのリアルタイム）</td></tr>
 <tr><td>リージョン</td><td><code>asia-northeast1</code>（東京）</td><td>BigQuery のデータの保存場所</td></tr>
 </tbody></table></div>
 

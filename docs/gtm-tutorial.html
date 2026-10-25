@@ -27,13 +27,13 @@
 <a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
 <a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
 </nav>
-<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
+<div class="side-links"><p>サイト</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">トップ</a><p>データを送る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtag.html">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtm.html">GTM 練習ページ</a><p>データを見る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/analytics.html">分析</a></div>
 </aside>
 <main>
 <div class="content">
 <div class="kicker"><span class="chip">04</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-gtm">GTM</span><span class="chip t-ga4">GA4</span></div>
 <h1>GTMを実際に使う</h1>
-<p class="lead">練習用ページ <a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html">gtm.html</a> を使って、方式A（dataLayer.push）と方式B（クラス名・data属性）の両方で GA4 にイベントを送ります。最後に「クラス名を変えると方式Bだけ止まる」ことを確かめ、公開まで行います。所要時間は60〜90分です。</p>
+<p class="lead">練習用ページ <a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtm.html">send-gtm.html</a> を使って、方式A（dataLayer.push）と方式B（クラス名・data属性）の両方で GA4 にイベントを送ります。最後に「クラス名を変えると方式Bだけ止まる」ことを確かめ、公開まで行います。所要時間は60〜90分です。</p>
 
 <div class="toc"><p>この章の内容</p><ol>
 <li><a href="#inventory">作るものの一覧</a></li>
@@ -46,7 +46,7 @@
 </ol></div>
 
 <div class="callout tip"><span class="label">ページの見方</span>
-<p>gtm.html の右側には <strong>dataLayer の中身</strong>が新しい順に表示されます。ボタンを押したときに何が積まれたかを見ながら進めると、GTM の動きがよく分かります。青枠がページのコードが積んだもの、灰色が GTM 自身が積んだもの（<code>gtm.*</code>）です。<code>(event なし)</code> は <code>event</code> キーのない push で、トリガーは動きません。</p></div>
+<p>send-gtm.html の右側には <strong>dataLayer の中身</strong>が新しい順に表示されます。ボタンを押したときに何が積まれたかを見ながら進めると、GTM の動きがよく分かります。青枠がページのコードが積んだもの、灰色が GTM 自身が積んだもの（<code>gtm.*</code>）です。<code>(event なし)</code> は <code>event</code> キーのない push で、トリガーは動きません。</p></div>
 
 <h2 id="inventory">作るものの一覧</h2>
 <p>この章で GTM に作るものをまとめておきます。名前は一例です。先頭の略号は種類を表し、一覧で探しやすくするための慣習です（dlv = データレイヤーの変数、CE = カスタムイベント、cjs = カスタム JavaScript、aev = 自動イベント変数）。<code>cta</code> は Call To Action の略で、資料請求のように行動を促すボタンのことです。</p>
@@ -83,28 +83,28 @@
 <tr><th>コンテナ名</th><td><code>syamozipc.github.io</code></td></tr>
 <tr><th>ターゲット プラットフォーム</th><td>ウェブ</td></tr>
 </tbody></table></div>
-<p>利用規約に同意するとインストール用のスニペットが表示されます。gtm.html にはすでに組み込んであるので、閉じて構いません。画面上部に表示される <code>GTM-XXXXXXX</code> がコンテナIDです。</p>
+<p>利用規約に同意するとインストール用のスニペットが表示されます。send-gtm.html にはすでに組み込んであるので、閉じて構いません。画面上部に表示される <code>GTM-XXXXXXX</code> がコンテナIDです。</p>
 <p><code>GTM-</code> は設定を入れる箱（コンテナ）のID、<code>G-</code> は GA4 の送り先（測定ID）で、まったく別物です。GTM の箱の中に Google タグを作り、そのタグが <code>G-</code> に送ります。</p>
 <label class="check"><input type="checkbox" id="setup-container"> コンテナを作り、コンテナIDを控えた</label></li>
 
-<li><h4>gtm.html にコンテナIDを設定する</h4>
-<p>gtm.html の <code>window.GTM_ID</code> と、<code>&lt;body&gt;</code> 直後の noscript にある <code>id=</code> の2か所を、自分のコンテナIDに書き換えます。このリポジトリでは <code>GTM-KXV4CBBD</code> を設定済みです。</p>
-<p>gtm.html を開き、「GTM-KXV4CBBD 読み込み済み」と表示され、右の dataLayer に <code>gtm.js</code>・<code>gtm.dom</code>・<code>gtm.load</code> が並べば成功です。ローカルで試すときは、リポジトリ直下で <code>python3 -m http.server 8000</code> を実行し、<code>http://localhost:8000/gtm.html</code> を開きます。</p>
-<label class="check"><input type="checkbox" id="setup-load"> gtm.html で「読み込み済み」になった</label></li>
+<li><h4>send-gtm.html にコンテナIDを設定する</h4>
+<p>send-gtm.html の <code>window.GTM_ID</code> と、<code>&lt;body&gt;</code> 直後の noscript にある <code>id=</code> の2か所を、自分のコンテナIDに書き換えます。このリポジトリでは <code>GTM-KXV4CBBD</code> を設定済みです。</p>
+<p>send-gtm.html を開き、「GTM-KXV4CBBD 読み込み済み」と表示され、右の dataLayer に <code>gtm.js</code>・<code>gtm.dom</code>・<code>gtm.load</code> が並べば成功です。ローカルで試すときは、リポジトリ直下で <code>python3 -m http.server 8000</code> を実行し、<code>http://localhost:8000/send-gtm.html</code> を開きます。</p>
+<label class="check"><input type="checkbox" id="setup-load"> send-gtm.html で「読み込み済み」になった</label></li>
 
 <li><h4>Google タグを作る</h4>
 <p><span class="ui-path"><span>タグ</span><span>新規</span><span>タグの設定</span><span>Google タグ</span></span> を選びます。</p>
 <div class="table-wrap"><table class="form-table"><tbody>
 <tr><th>タグ名</th><td>GA4 - Google タグ</td></tr>
 <tr><th>タグ ID</th><td><code>G-FEHSK6QJLE</code></td></tr>
-<tr><th>共有イベントの設定</th><td>「イベントの設定変数」は「なし」のまま、「パラメータを追加」で <code>tag_source</code> = <code>gtm</code><br><small>全イベントに付く。index.html（gtag.js）から来たデータと見分けるため</small></td></tr>
+<tr><th>共有イベントの設定</th><td>「イベントの設定変数」は「なし」のまま、「パラメータを追加」で <code>tag_source</code> = <code>gtm</code><br><small>全イベントに付く。send-gtag.html（gtag.js）から来たデータと見分けるため</small></td></tr>
 <tr><th>トリガー</th><td>Initialization - All Pages</td></tr>
 </tbody></table></div>
 <p>このタグだけで <code>page_view</code> などの自動イベントが送られるようになります。</p>
 <label class="check"><input type="checkbox" id="setup-gtag"> Google タグを作った</label></li>
 
 <li><h4>プレビューで接続する</h4>
-<p>GTM 画面右上の「プレビュー」を押すと Tag Assistant が開きます。gtm.html のURLを入れて「Connect」を押すと、別ウィンドウで gtm.html が開き、右下に「Tag Assistant Connected」と出ます。ボタンは、この接続で開いた gtm.html で押します。</p>
+<p>GTM 画面右上の「プレビュー」を押すと Tag Assistant が開きます。send-gtm.html のURLを入れて「Connect」を押すと、別ウィンドウで send-gtm.html が開き、右下に「Tag Assistant Connected」と出ます。ボタンは、この接続で開いた send-gtm.html で押します。</p>
 <p>Tag Assistant の画面の見方です。</p>
 <ul>
 <li><strong>上部のタブ</strong>: <code>GTM-KXV4CBBD</code> は GTM の動き（どのタグが動いたか）、<code>G-FEHSK6QJLE</code> は GA4 に実際に送った内容です。</li>
@@ -119,7 +119,7 @@
 </ol>
 
 <h2 id="a">方式A: dataLayer.push</h2>
-<p>gtm.html の「資料請求」ボタンは、押すと次の1行を実行します。GTM 側では「<code>event</code> が <code>cta_click</code> のメッセージが来たら、その中の <code>cta_name</code> と <code>cta_position</code> を GA4 に送る」設定を作ります。</p>
+<p>send-gtm.html の「資料請求」ボタンは、押すと次の1行を実行します。GTM 側では「<code>event</code> が <code>cta_click</code> のメッセージが来たら、その中の <code>cta_name</code> と <code>cta_position</code> を GA4 に送る」設定を作ります。</p>
 <pre data-lang="javascript"><code>dataLayer.push({ event: "cta_click", cta_name: "資料請求", cta_position: "hero" });</code></pre>
 <p>dataLayer は、ページから GTM への「連絡メモを入れる箱」です。ページは「何が起きたか」をメモに書くだけで、GA4 のことは知りません。GTM がメモを読み、どこに何を送るかを決めます。</p>
 <div class="table-wrap"><table>
@@ -165,7 +165,7 @@
 <label class="check"><input type="checkbox" id="a-tag"> タグ GA4 - cta_click を作った</label></li>
 
 <li><h4>プレビューで確かめる</h4>
-<p>プレビューを接続し直し、gtm.html で「資料請求」を押します。Tag Assistant の左に <code>cta_click</code> が増えるので選びます。</p>
+<p>プレビューを接続し直し、send-gtm.html で「資料請求」を押します。Tag Assistant の左に <code>cta_click</code> が増えるので選びます。</p>
 <ul>
 <li><strong>タグ</strong>タブ: 「GA4 - cta_click」が「配信されたタグ」にある。</li>
 <li><strong>変数</strong>タブ: <code>dlv - cta_name</code> が「資料請求」、<code>dlv - cta_position</code> が「hero」になっている。</li>
@@ -201,7 +201,7 @@
 
 
 <h2 id="b">方式B: クラス名・data属性</h2>
-<p>gtm.html の「方式B」のボタンには計測のコードがありません。HTML はこれだけです。</p>
+<p>send-gtm.html の「方式B」のボタンには計測のコードがありません。HTML はこれだけです。</p>
 <pre data-lang="html"><code>&lt;button class="js-track-click" data-track-name="pricing_pro"&gt;
   &lt;span class="icon"&gt;▶&lt;/span&gt; プロプランを見る
 &lt;/button&gt;</code></pre>
@@ -248,7 +248,7 @@
 <label class="check"><input type="checkbox" id="b-tag"> タグ GA4 - ui_click を作った</label></li>
 
 <li><h4>プレビューで確かめる</h4>
-<p>接続し直して「プロプランを見る」を押します。gtm.html の右側に <code>gtm.click</code> が現れ、<code>gtm.element</code> に押された要素（<code>&lt;button.js-track-click[data-track-name="pricing_pro"]&gt;</code>）が入っているのが見えます。Tag Assistant では左の一覧の「クリック」で「GA4 - ui_click」が配信され、<code>cjs - track name</code> が <code>pricing_pro</code> になっています。</p>
+<p>接続し直して「プロプランを見る」を押します。send-gtm.html の右側に <code>gtm.click</code> が現れ、<code>gtm.element</code> に押された要素（<code>&lt;button.js-track-click[data-track-name="pricing_pro"]&gt;</code>）が入っているのが見えます。Tag Assistant では左の一覧の「クリック」で「GA4 - ui_click」が配信され、<code>cjs - track name</code> が <code>pricing_pro</code> になっています。</p>
 <p>▶ アイコンの部分を狙って押しても同じ結果になることも確かめてください。</p>
 <label class="check"><input type="checkbox" id="b-preview"> ボタン本体とアイコンの両方で発火を確認した</label></li>
 </ol>
@@ -259,7 +259,7 @@
 <p>方式Bの弱点は「見た目のための名前に計測が依存する」ことです。デザイン改修でクラス名が変わったときに何が起きるかを試します。</p>
 <ol class="steps">
 <li><h4>クラス名を変えて押す</h4>
-<p>gtm.html の「デザイン改修をシミュレート（クラス名を変更）」をオンにします。ボタンのクラスが <code>js-track-click</code> から <code>btn-cta-v2</code> に変わります。この状態で「プロプランを見る」を押すと、<code>gtm.click</code> は出ますが、Tag Assistant では「GA4 - ui_click」が <strong>未配信のタグ</strong> に移ります。エラーはどこにも出ません。</p>
+<p>send-gtm.html の「デザイン改修をシミュレート（クラス名を変更）」をオンにします。ボタンのクラスが <code>js-track-click</code> から <code>btn-cta-v2</code> に変わります。この状態で「プロプランを見る」を押すと、<code>gtm.click</code> は出ますが、Tag Assistant では「GA4 - ui_click」が <strong>未配信のタグ</strong> に移ります。エラーはどこにも出ません。</p>
 <p>一方、方式Aの「資料請求」は変わらず発火します。push のコードは見た目と関係ないからです。</p>
 <label class="check"><input type="checkbox" id="br-class"> クラス名の変更で ui_click が止まるのを確認した</label></li>
 
@@ -267,7 +267,7 @@
 <p>トリガー「Click - class」を開き、右上のメニューから「コピーを作成」します。名前を <code>Click - data-attr</code> に、条件の CSS セレクタを次に変えます。</p>
 <pre data-lang="css"><code>[data-track-name], [data-track-name] *</code></pre>
 <p>タグ「GA4 - ui_click」のトリガーを <code>Click - data-attr</code> に差し替えて、プレビューを接続し直します。クラス名を変えたままでもタグが発火するようになります。</p>
-<p>確かめ終わったら、gtm.html のスイッチをオフに戻しておきます。</p>
+<p>確かめ終わったら、send-gtm.html のスイッチをオフに戻しておきます。</p>
 <label class="check"><input type="checkbox" id="br-data"> data属性のトリガーならクラス名を変えても発火するのを確認した</label></li>
 </ol>
 <div class="callout key"><span class="label">ここで分かったこと</span>
@@ -285,7 +285,7 @@
 <div class="table-wrap"><table class="form-table"><tbody>
 <tr><th>トリガー名</th><td>Form - gtm-form</td></tr>
 <tr><th>タグの配信を待つ</th><td>オフ</td></tr>
-<tr><th>妥当性をチェック</th><td>オフ<br><small>gtm.html は送信を <code>preventDefault()</code> で止めているため、オンだと発火しない</small></td></tr>
+<tr><th>妥当性をチェック</th><td>オフ<br><small>send-gtm.html は送信を <code>preventDefault()</code> で止めているため、オンだと発火しない</small></td></tr>
 <tr><th>このトリガーの発生場所</th><td>一部のフォーム ／ <code>Form ID</code> <code>等しい</code> <code>gtm-form</code></td></tr>
 </tbody></table></div>
 <p><strong>タグ</strong>: <span class="ui-path"><span>タグ</span><span>新規</span><span>Google アナリティクス: GA4 イベント</span></span></p>
@@ -299,7 +299,7 @@
 <label class="check"><input type="checkbox" id="c-form"> フォーム送信で generate_lead を送った</label></li>
 
 <li><h4>バナーの表示を計測する</h4>
-<p>gtm.html の下の方にある緑のバナー（<code>id="promo-banner"</code>）が画面に入ったときに送ります。</p>
+<p>send-gtm.html の下の方にある緑のバナー（<code>id="promo-banner"</code>）が画面に入ったときに送ります。</p>
 <p><strong>変数</strong>: <span class="ui-path"><span>変数</span><span>ユーザー定義変数</span><span>新規</span><span>自動イベント変数</span></span></p>
 <div class="table-wrap"><table class="form-table"><tbody>
 <tr><th>変数名</th><td>aev - promo name</td></tr>
@@ -337,7 +337,7 @@
 <label class="check"><input type="checkbox" id="p-publish"> 公開した</label></li>
 
 <li><h4>GA4 のリアルタイムで確かめる</h4>
-<p>Tag Assistant のタブを閉じ、プレビューに接続していない普通のタブで gtm.html を開いて各ボタンを押します。GA4 のリアルタイムの「イベント数（イベント名）」に <code>cta_click</code>、<code>sign_up</code>、<code>add_to_cart</code>、<code>ui_click</code>、<code>generate_lead</code>、<code>view_promotion</code> が出ます。<code>cta_click</code> を押すと、パラメータに <code>cta_name</code> と <code>tag_source</code> が見えます。</p>
+<p>Tag Assistant のタブを閉じ、プレビューに接続していない普通のタブで send-gtm.html を開いて各ボタンを押します。GA4 のリアルタイムの「イベント数（イベント名）」に <code>cta_click</code>、<code>sign_up</code>、<code>add_to_cart</code>、<code>ui_click</code>、<code>generate_lead</code>、<code>view_promotion</code> が出ます。<code>cta_click</code> を押すと、パラメータに <code>cta_name</code> と <code>tag_source</code> が見えます。</p>
 <p>出てこないときは、次の順に確かめます。</p>
 <ul>
 <li><strong>カードの下に隠れていないか</strong>。件数の多い順に並ぶので、下までスクロールするか次のページを見る。</li>
@@ -354,7 +354,7 @@
 <tr><td>CTA名</td><td><code>cta_name</code></td><td>cta_click で押された CTA ボタンの名前（資料請求 など）</td></tr>
 <tr><td>CTA位置</td><td><code>cta_position</code></td><td>cta_click のボタンが置かれている場所（hero / footer）</td></tr>
 <tr><td>クリック名</td><td><code>click_name</code></td><td>ui_click で押された要素の data-track-name（pricing_pro など）</td></tr>
-<tr><td>タグの出どころ</td><td><code>tag_source</code></td><td>GTM 経由のイベントに付く値（gtm）。gtag.js 直書きの index.html では空</td></tr>
+<tr><td>タグの出どころ</td><td><code>tag_source</code></td><td>GTM 経由のイベントに付く値（gtm）。gtag.js 直書きの send-gtag.html では空</td></tr>
 </tbody></table></div>
 <p>ディメンション名は必須で、日本語でかまいません。イベント パラメータはコードのキーと完全一致させます。<code>method</code> と <code>form_id</code> は登録が要りません。<code>method</code> は既定ディメンション、<code>form_id</code> は02章で登録済みです。</p>
 <p>翌日以降、探索で「タグの出どころ × イベント名」の表を作ると、gtag.js 経由と GTM 経由のデータを見分けられます。</p>

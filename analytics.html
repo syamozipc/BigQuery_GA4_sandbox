@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>分析 | GA4・GTM・BigQuery サンドボックス</title>
+    <!-- このページには計測のスクリプトを入れていない（集計を見るだけでデータが増えないように） -->
+    <!-- integrity: 中身が改ざんされていたら読み込まない（ページ上のスクリプトはトークンを読めるため） -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+      integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="./assets/auth.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: #f4f6f9;
+        color: #263238;
+        line-height: 1.6;
+      }
+      a {
+        color: #2f5bb0;
+      }
+      #user-name {
+        font-size: 13px;
+      }
+      .wrap {
+        max-width: 1200px;
+        margin: 20px auto 60px;
+        padding: 0 max(16px, 3vw);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #dfe4ea;
+        border-radius: 12px;
+        padding: 20px 22px;
+        min-width: 0;
+      }
+      .card h2 {
+        font-size: 16px;
+        margin-bottom: 4px;
+      }
+      .card > .note,
+      .note {
+        font-size: 13px;
+        color: #607d8b;
+        margin-bottom: 12px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+        gap: 20px;
+      }
+      .card-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+
+      /* タブ */
+      .tabs {
+        display: flex;
+        gap: 6px;
+        border-bottom: 2px solid #dfe4ea;
+      }
+      .tabs button {
+        font: inherit;
+        font-size: 15px;
+        font-weight: 700;
+        padding: 10px 18px;
+        border: none;
+        background: none;
+        color: #607d8b;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+      }
+      .tabs button small {
+        display: block;
+        font-size: 11px;
+        font-weight: 400;
+      }
+      .tabs button[aria-selected="true"] {
+        color: #2f5bb0;
+        border-bottom-color: #2f5bb0;
+      }
+      .tab-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        align-items: center;
+        font-size: 14px;
+      }
+      .toolbar label {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+      }
+      input[type="date"],
+      select {
+        font: inherit;
+        font-size: 14px;
+        padding: 6px 10px;
+        border: 1px solid #c7d0da;
+        border-radius: 8px;
+        background: #fff;
+        max-width: 100%;
+      }
+      .primary {
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 8px 18px;
+        border: none;
+        border-radius: 8px;
+        background: #2f5bb0;
+        color: #fff;
+        cursor: pointer;
+      }
+      .primary:disabled {
+        background: #9aa9c4;
+        cursor: wait;
+      }
+      .status {
+        margin-left: auto;
+        font-size: 13px;
+        color: #607d8b;
+      }
+      .badge {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        background: #e3ecfb;
+        color: #2f5bb0;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 999px;
+      }
+      .badge button {
+        border: none;
+        background: none;
+        color: inherit;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+      }
+      .kpi {
+        border: 1px solid #dfe4ea;
+        border-radius: 10px;
+        padding: 12px 16px;
+      }
+      .kpi .label {
+        font-size: 12px;
+        color: #607d8b;
+      }
+      .kpi .value {
+        font-size: 26px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 7px 10px;
+        border-bottom: 1px solid #eef1f5;
+        vertical-align: top;
+      }
+      th {
+        font-size: 12px;
+        color: #607d8b;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      td.num,
+      th.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      tr.click {
+        cursor: pointer;
+      }
+      tr.click:hover {
+        background: #f3f6fb;
+      }
+      tr.selected {
+        background: #e3ecfb;
+      }
+      code {
+        font-family: "SFMono-Regular", Menlo, monospace;
+        font-size: 12.5px;
+        background: #eef2f7;
+        padding: 0 5px;
+        border-radius: 4px;
+        word-break: break-all;
+      }
+      .empty {
+        color: #90a4ae;
+        text-align: center;
+        padding: 16px;
+      }
+      .bar {
+        display: inline-block;
+        height: 8px;
+        border-radius: 4px;
+        background: #9cb6e6;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+      details.code {
+        margin-top: 12px;
+        font-size: 13px;
+      }
+      details.code summary {
+        cursor: pointer;
+        color: #2f5bb0;
+      }
+      details.code pre {
+        margin-top: 8px;
+        background: #1f2630;
+        color: #d8e1ea;
+        font-family: "SFMono-Regular", Menlo, monospace;
+        font-size: 12px;
+        border-radius: 8px;
+        padding: 12px 14px;
+        overflow-x: auto;
+        line-height: 1.55;
+      }
+      .err {
+        background: #fdecea;
+        color: #b3261e;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 14px;
+      }
+      .warn {
+        background: #fff4d6;
+        color: #8a5a00;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 14px;
+      }
+      #login {
+        text-align: center;
+        padding: 40px 16px;
+      }
+      #login h2 {
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+      #login p {
+        color: #607d8b;
+        font-size: 14px;
+        margin-bottom: 20px;
+      }
+      #login .g_id_signin {
+        display: inline-block;
+      }
+    </style>
+    <link rel="stylesheet" href="./assets/site.css" />
+  </head>
+  <body>
+    <div class="site-nav" role="navigation" aria-label="サイト内のページ">
+      <a class="site-brand" href="./">GA4・GTM・BigQuery サンドボックス</a>
+      <span class="site-group">データを送る</span>
+      <a href="./send-gtag.html">テストサイト（gtag.js）</a>
+      <a href="./send-gtm.html">GTM 練習ページ</a>
+      <span class="site-group">データを見る</span>
+      <a href="./analytics.html" aria-current="page">分析</a>
+      <a class="site-guide" href="./docs/" target="_blank" rel="noopener">学習ガイド</a>
+    </div>
+    <header>
+      <div>
+        <h1>分析</h1>
+        <p>GA4 に届いたデータを、Data API（過去30分）と BigQuery（日別）で集計します。</p>
+      </div>
+      <nav>
+        <a href="./docs/visualize.html" target="_blank" rel="noopener">ガイド 07章</a>
+        <span id="user-name" hidden></span>
+        <button id="btn-logout" type="button" onclick="logout()" hidden>ログアウト</button>
+      </nav>
+    </header>
+
+    <!-- ログイン。トークンはページの中にだけ持つので、ページを開くたびにログインする -->
+    <div id="login" hidden>
+      <h2>Google アカウントでログイン</h2>
+      <p>BigQuery と GA4 の閲覧権限を、まとめて1回で許可します。ログインはこのページを開いている間だけ有効で、移動や再読み込みをすると消えます。</p>
+      <div
+        id="g_id_onload"
+        data-client_id="973636857836-8j3p9s89jknl45nsu7459np3gnsudev7.apps.googleusercontent.com"
+        data-callback="onSignIn"
+        data-auto_prompt="false"
+      ></div>
+      <div class="g_id_signin" data-type="standard" data-size="large" data-text="signin_with" data-locale="ja"></div>
+    </div>
+
+    <div class="wrap" id="main" hidden>
+      <div class="err" id="error" hidden></div>
+      <div class="warn" id="warning" hidden></div>
+
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tab-realtime" aria-selected="true" onclick="showTab('realtime')">
+          リアルタイム<small>GA4 Data API・過去30分</small>
+        </button>
+        <button role="tab" id="tab-history" aria-selected="false" onclick="showTab('history')">
+          過去の推移<small>BigQuery・日別</small>
+        </button>
+      </div>
+
+      <!-- ========== リアルタイム ========== -->
+      <div class="tab-panel" id="panel-realtime" role="tabpanel">
+        <div class="card toolbar">
+          <label
+            >ユーザー
+            <select id="rt-user" onchange="rtFetchAll()">
+              <option value="">全ユーザー</option>
+            </select></label
+          >
+          <label><input type="checkbox" id="rt-auto" checked onchange="rtSetAuto()" /> 30秒ごとに更新</label>
+          <button class="primary" id="rt-btn" type="button" onclick="rtFetchAll()">更新</button>
+          <span class="badge" id="rt-badge" hidden
+            ><span id="rt-badge-text"></span
+            ><button type="button" onclick="rtPickUser('')" aria-label="絞り込みを解除">✕</button></span
+          >
+          <span class="status" id="rt-status">—</span>
+        </div>
+
+        <section class="card">
+          <h2>過去30分の概要</h2>
+          <p class="note">ユーザーを選ぶと、ユーザー別の表以外がそのユーザーに絞られます。</p>
+          <div class="kpis">
+            <div class="kpi"><div class="label">アクティブユーザー</div><div class="value" id="rt-kpi-users">—</div></div>
+            <div class="kpi"><div class="label">イベント</div><div class="value" id="rt-kpi-events">—</div></div>
+            <div class="kpi"><div class="label">表示回数</div><div class="value" id="rt-kpi-views">—</div></div>
+          </div>
+          <div style="margin-top: 16px"><canvas id="rt-chart" height="60"></canvas></div>
+          <details class="code"><summary>送ったリクエストを見る</summary><pre id="rt-req-kpi"></pre><pre id="rt-req-minutes"></pre></details>
+        </section>
+
+        <div class="grid">
+          <section class="card">
+            <div class="card-head">
+              <h2>切り口別</h2>
+              <select id="rt-dim" onchange="rtFetchBreakdown()">
+                <option value="unifiedScreenName">ページ</option>
+                <option value="eventName">イベント</option>
+                <option value="customUser:plan">プラン（customUser:plan）</option>
+                <option value="customUser:user_pattern">パターン（customUser:user_pattern）</option>
+              </select>
+            </div>
+            <p class="note" id="rt-dim-note"></p>
+            <div class="table-wrap" id="rt-tbl-dim"></div>
+            <details class="code"><summary>送ったリクエストを見る</summary><pre id="rt-req-dim"></pre></details>
+          </section>
+
+          <section class="card">
+            <h2>ユーザー別（行を押すと絞り込み）</h2>
+            <p class="note">
+              <code>customUser:app_user_id</code> の一覧です。UUID のように値の種類が多い切り口は、行数が増えると <code>(other)</code> にまとめられたり、しきい値で隠れたりします。正確に追うなら「過去の推移」タブを使います。
+            </p>
+            <div class="table-wrap" id="rt-tbl-users"></div>
+            <details class="code"><summary>送ったリクエストを見る</summary><pre id="rt-req-users"></pre></details>
+          </section>
+        </div>
+      </div>
+
+      <!-- ========== 過去の推移 ========== -->
+      <div class="tab-panel" id="panel-history" role="tabpanel" hidden>
+        <div class="card toolbar">
+          <label>期間 <input type="date" id="bq-from" /> 〜 <input type="date" id="bq-to" /></label>
+          <label><input type="checkbox" id="bq-intraday" checked /> 今日の分（<code>events_intraday_</code>）も含める</label>
+          <button class="primary" id="bq-btn" type="button" onclick="bqFetchAll()">取得</button>
+          <span class="status" id="bq-cost">—</span>
+        </div>
+
+        <section class="card">
+          <h2>期間の概要</h2>
+          <p class="note">セッションは user_pseudo_id と ga_session_id の組み合わせで数えています（06章 レシピ4）。</p>
+          <div class="kpis">
+            <div class="kpi"><div class="label">ユーザー</div><div class="value" id="bq-kpi-users">—</div></div>
+            <div class="kpi"><div class="label">セッション</div><div class="value" id="bq-kpi-sessions">—</div></div>
+            <div class="kpi"><div class="label">ページビュー</div><div class="value" id="bq-kpi-pv">—</div></div>
+            <div class="kpi"><div class="label">イベント</div><div class="value" id="bq-kpi-events">—</div></div>
+          </div>
+          <div style="margin-top: 16px"><canvas id="bq-chart" height="60"></canvas></div>
+          <details class="code"><summary>実行した SQL を見る</summary><pre id="bq-sql-kpi"></pre><pre id="bq-sql-daily"></pre></details>
+        </section>
+
+        <div class="grid">
+          <section class="card">
+            <div class="card-head">
+              <h2>切り口別</h2>
+              <select id="bq-dim" onchange="bqFetchBreakdown()">
+                <option value="source">送信元（gtag.js / GTM）</option>
+                <option value="event">イベント</option>
+                <option value="plan">プラン（user_properties）</option>
+              </select>
+            </div>
+            <p class="note" id="bq-dim-note"></p>
+            <div class="table-wrap" id="bq-tbl-dim"></div>
+            <details class="code"><summary>実行した SQL を見る</summary><pre id="bq-sql-dim"></pre></details>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <h2>パラメータの値</h2>
+              <select id="bq-key" onchange="bqFetchParams()">
+                <option value="button_name">button_name（テストサイト）</option>
+                <option value="item_name">item_name（テストサイト）</option>
+                <option value="cta_name">cta_name（GTM 方式A）</option>
+                <option value="click_name">click_name（GTM 方式B）</option>
+                <option value="method">method（sign_up）</option>
+                <option value="form_id">form_id</option>
+                <option value="promotion_name">promotion_name（GTM 発展）</option>
+              </select>
+            </div>
+            <p class="note">カスタムディメンションに登録していないパラメータも、BigQuery では全部見えます（06章 レシピ1・2）。</p>
+            <div class="table-wrap" id="bq-tbl-params"></div>
+            <details class="code"><summary>実行した SQL を見る</summary><pre id="bq-sql-params"></pre></details>
+          </section>
+        </div>
+
+        <section class="card">
+          <h2>ファネル（商品を見た → カートに入れた → 購入した）</h2>
+          <p class="note">ユーザーごとに各ステップの最初の時刻を取り、順番どおりに進んだ人を数えます（06章 レシピ6）。</p>
+          <div class="table-wrap" id="bq-tbl-funnel"></div>
+          <details class="code"><summary>実行した SQL を見る</summary><pre id="bq-sql-funnel"></pre></details>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>ユーザーの行動履歴</h2>
+            <select id="bq-user" onchange="bqFetchTimeline()">
+              <option value="">user_id を選ぶ</option>
+            </select>
+          </div>
+          <p class="note">
+            <code>user_id</code> 列で1人に絞り、新しい順に並べます。しきい値や (other) の影響を受けません（06章 レシピ5）。user_id を送っているのはテストサイトだけです。
+          </p>
+          <div class="table-wrap" id="bq-tbl-timeline"><p class="empty">上で user_id を選ぶと表示します。</p></div>
+          <details class="code"><summary>実行した SQL を見る</summary><pre id="bq-sql-users"></pre><pre id="bq-sql-timeline"></pre></details>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const PROJECT_ID = "big-query-sample-492309";
+      const DATASET = "analytics_324810718";
+      const PROPERTY_ID = "324810718";
+      const PRICE_PER_TIB = 6.25; // BigQuery のオンデマンド料金（USD）
+
+      let auth = null;
+
+      // ================= ログインとタブ =================
+      function start() {
+        auth = SandboxAuth.get();
+        document.getElementById("login").hidden = !!auth;
+        document.getElementById("main").hidden = !auth;
+        document.getElementById("btn-logout").hidden = !auth;
+        const name = document.getElementById("user-name");
+        name.hidden = !auth;
+        if (!auth) return;
+        name.textContent = auth.name;
+        bqSetDefaultDates();
+        showTab(location.hash === "#history" ? "history" : "realtime");
+      }
+
+      function onSignIn(credential) {
+        SandboxAuth.handleCredential(credential, start, showError);
+      }
+
+      function logout() {
+        SandboxAuth.clear();
+        clearInterval(rtTimer);
+        start();
+      }
+
+      // トークンの期限切れなどで 401 が返ったら、ログイン画面に戻す
+      function handleAuthError(status) {
+        if (status !== 401) return false;
+        SandboxAuth.forget();
+        clearInterval(rtTimer);
+        start();
+        return true;
+      }
+
+      let bqLoaded = false;
+      function showTab(name) {
+        for (const t of ["realtime", "history"]) {
+          document.getElementById("tab-" + t).setAttribute("aria-selected", String(t === name));
+          document.getElementById("panel-" + t).hidden = t !== name;
+        }
+        history.replaceState(null, "", "#" + name);
+        hideMessages();
+        if (name === "realtime") {
+          rtFetchAll();
+          rtSetAuto();
+        } else {
+          clearInterval(rtTimer); // 見ていないタブは自動更新しない（Data API のクォータ節約）
+          if (!bqLoaded) {
+            bqLoaded = true;
+            bqFetchAll();
+          }
+        }
+      }
+
+      // ================= リアルタイム（GA4 Data API） =================
+      const DIM_USER = "customUser:app_user_id";
+      const RT_NOTES = {
+        unifiedScreenName:
+          "リアルタイムの API ではイベントスコープの tag_source が使えないので、ページ名で送信元を見分けます。「GTM 練習ページ」で始まる行が GTM 経由、「テストサイト（gtag.js）」で始まる行が gtag.js です。",
+        eventName: "件数の多い順です。",
+        "customUser:plan": "ユーザースコープのカスタムディメンションです（02章で登録）。",
+        "customUser:user_pattern": "テストサイトの仮ユーザーのパターンです（02章で登録）。",
+      };
+      let rtTimer = null;
+      let rtChart = null;
+
+      function rtSetAuto() {
+        clearInterval(rtTimer);
+        if (document.getElementById("rt-auto").checked) rtTimer = setInterval(rtFetchAll, 30000);
+      }
+
+      async function runRealtime(body, preId) {
+        const url = `https://analyticsdata.googleapis.com/v1beta/properties/${PROPERTY_ID}:runRealtimeReport`;
+        document.getElementById(preId).textContent = `POST ${url}\n\n` + JSON.stringify(body, null, 2);
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { Authorization: "Bearer " + auth.token, "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (handleAuthError(res.status)) throw new Error("ログインの期限が切れました。もう一度ログインしてください。");
+        if (!res.ok) throw new Error(data.error?.message || `Data API エラー (${res.status})`);
+        return data;
+      }
+
+      // rows[i].dimensionValues[j].value / metricValues[j].value を扱いやすい形にする
+      const toRows = (res) =>
+        (res.rows || []).map((r) => ({
+          dims: (r.dimensionValues || []).map((d) => d.value),
+          mets: (r.metricValues || []).map((m) => Number(m.value)),
+        }));
+
+      const rtUser = () => document.getElementById("rt-user").value;
+      const rtFilter = () => {
+        const v = rtUser();
+        return v ? { filter: { fieldName: DIM_USER, stringFilter: { matchType: "EXACT", value: v } } } : undefined;
+      };
+
+      async function rtFetchAll() {
+        if (!auth) return;
+        const btn = document.getElementById("rt-btn");
+        btn.disabled = true;
+        btn.textContent = "更新中…";
+        const v = rtUser();
+        document.getElementById("rt-badge").hidden = !v;
+        document.getElementById("rt-badge-text").textContent = v ? `${v} で絞り込み中` : "";
+        try {
+          await Promise.all([rtFetchKpis(), rtFetchMinutes(), rtFetchBreakdown(), rtFetchUsers()]);
+        } catch (e) {
+          showError(e.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "更新";
+        }
+      }
+
+      async function rtFetchKpis() {
+        const res = await runRealtime(
+          {
+            metrics: [{ name: "activeUsers" }, { name: "eventCount" }, { name: "screenPageViews" }],
+            dimensionFilter: rtFilter(),
+            returnPropertyQuota: true,
+          },
+          "rt-req-kpi",
+        );
+        const m = toRows(res)[0]?.mets || [0, 0, 0];
+        setNum("rt-kpi-users", m[0]);
+        setNum("rt-kpi-events", m[1]);
+        setNum("rt-kpi-views", m[2]);
+        const q = res.propertyQuota?.tokensPerDay;
+        document.getElementById("rt-status").textContent =
+          "最終更新 " + new Date().toLocaleTimeString("ja-JP") + (q ? ` ／ 本日のトークン残り ${num(q.remaining)}` : "");
+      }
+
+      async function rtFetchMinutes() {
+        const res = await runRealtime(
+          { dimensions: [{ name: "minutesAgo" }], metrics: [{ name: "activeUsers" }], dimensionFilter: rtFilter() },
+          "rt-req-minutes",
+        );
+        // minutesAgo は "0"（直近1分）〜 "29"。古い順に並べる
+        const map = new Map(toRows(res).map((r) => [Number(r.dims[0]), r.mets[0]]));
+        const labels = [];
+        const values = [];
+        for (let i = 29; i >= 0; i--) {
+          labels.push(i === 0 ? "今" : `-${i}分`);
+          values.push(map.get(i) || 0);
+        }
+        if (rtChart) rtChart.destroy();
+        rtChart = new Chart(document.getElementById("rt-chart"), {
+          type: "bar",
+          data: { labels, datasets: [{ label: "アクティブユーザー", data: values, backgroundColor: "#9cb6e6", borderRadius: 3 }] },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { autoSkip: true, maxTicksLimit: 10 } }, y: { beginAtZero: true, ticks: { precision: 0 } } },
+          },
+        });
+      }
+
+      async function rtFetchBreakdown() {
+        const dim = document.getElementById("rt-dim").value;
+        document.getElementById("rt-dim-note").textContent = RT_NOTES[dim];
+        const res = await runRealtime(
+          {
+            dimensions: [{ name: dim }],
+            metrics: [{ name: "activeUsers" }, { name: "eventCount" }],
+            dimensionFilter: rtFilter(),
+            orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
+            limit: 20,
+          },
+          "rt-req-dim",
+        );
+        const label = document.getElementById("rt-dim").selectedOptions[0].textContent.replace(/（.*）/, "");
+        renderTable(
+          "rt-tbl-dim",
+          [label, "ユーザー", "イベント"],
+          toRows(res).map((r) => ({ cells: [esc(r.dims[0]), num(r.mets[0]), num(r.mets[1])], bar: r.mets[1] })),
+          { barCol: 2, empty: "直近30分のデータはありません。" },
+        );
+      }
+
+      async function rtFetchUsers() {
+        // 一覧は絞り込まずに全ユーザーを出す
+        const res = await runRealtime(
+          {
+            dimensions: [{ name: DIM_USER }],
+            metrics: [{ name: "activeUsers" }, { name: "eventCount" }],
+            orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
+            limit: 50,
+          },
+          "rt-req-users",
+        );
+        const rows = toRows(res);
+        const cur = rtUser();
+        renderTable(
+          "rt-tbl-users",
+          ["app_user_id", "ユーザー", "イベント"],
+          rows.map((r) => ({
+            cells: [`<code>${esc(r.dims[0])}</code>`, num(r.mets[0]), num(r.mets[1])],
+            bar: r.mets[1],
+            id: r.dims[0],
+            cls: "click" + (r.dims[0] === cur ? " selected" : ""),
+          })),
+          { barCol: 2, empty: "直近30分のデータはありません。", onRowClick: rtPickUser },
+        );
+        const sel = document.getElementById("rt-user");
+        sel.innerHTML =
+          '<option value="">全ユーザー</option>' +
+          rows.map((r) => `<option value="${esc(r.dims[0])}">${esc(r.dims[0])}（${r.mets[1]}件）</option>`).join("");
+        sel.value = cur;
+      }
+
+      function rtPickUser(id) {
+        const sel = document.getElementById("rt-user");
+        sel.value = sel.value === id ? "" : id;
+        rtFetchAll();
+      }
+
+      // ================= 過去の推移（BigQuery） =================
+      let bqChart = null;
+      let bqUseIntraday = true;
+      let bqBytes = 0;
+
+      function ymd(d) {
+        const p = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+      }
+      function bqSetDefaultDates() {
+        if (document.getElementById("bq-from").value) return;
+        const today = new Date();
+        const from = new Date(today);
+        from.setDate(today.getDate() - 6);
+        document.getElementById("bq-from").value = ymd(from);
+        document.getElementById("bq-to").value = ymd(today);
+      }
+
+      // 必要な列だけを読む共通部分。今日の分は日次テーブルがまだないので events_intraday_ を足す
+      function cte() {
+        const from = document.getElementById("bq-from").value.replace(/-/g, "");
+        const to = document.getElementById("bq-to").value.replace(/-/g, "");
+        const cols = "event_date, event_timestamp, event_name, user_pseudo_id, user_id, event_params, user_properties";
+        const where = `_TABLE_SUFFIX BETWEEN '${from}' AND '${to}'`;
+        let src = `  SELECT ${cols}\n  FROM \`${PROJECT_ID}.${DATASET}.events_*\`\n  WHERE ${where}`;
+        if (bqUseIntraday) {
+          src += `\n  UNION ALL\n  SELECT ${cols}\n  FROM \`${PROJECT_ID}.${DATASET}.events_intraday_*\`\n  WHERE ${where}`;
+        }
+        return `WITH ev AS (\n${src}\n)\n`;
+      }
+      const P = (key) => `(SELECT value.string_value FROM UNNEST(event_params) WHERE key = '${key}')`;
+      const SOURCE = `IFNULL(${P("tag_source")}, 'gtag.js')`;
+
+      async function runQuery(sql, preId) {
+        document.getElementById(preId).textContent = sql.trim();
+        const res = await fetch(`https://bigquery.googleapis.com/bigquery/v2/projects/${PROJECT_ID}/queries`, {
+          method: "POST",
+          headers: { Authorization: "Bearer " + auth.token, "Content-Type": "application/json" },
+          body: JSON.stringify({ query: sql, useLegacySql: false, timeoutMs: 30000 }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (handleAuthError(res.status)) throw new Error("ログインの期限が切れました。もう一度ログインしてください。");
+        if (!res.ok) throw new Error(data.error?.message || "BigQuery エラー");
+        const bytes = Number(data.totalBytesProcessed || 0);
+        bqBytes += bytes;
+        document.getElementById(preId).textContent += `\n\n-- 処理量: ${fmtBytes(bytes)}`;
+        const fields = (data.schema?.fields || []).map((f) => f.name);
+        // rows[i].f[j].v を {列名: 値} の形にする
+        return (data.rows || []).map((r) => Object.fromEntries(r.f.map((c, i) => [fields[i], c.v])));
+      }
+
+      async function bqFetchAll() {
+        const btn = document.getElementById("bq-btn");
+        btn.disabled = true;
+        btn.textContent = "取得中…";
+        hideMessages();
+        bqUseIntraday = document.getElementById("bq-intraday").checked;
+        bqBytes = 0;
+        const run = () =>
+          Promise.all([bqFetchKpis(), bqFetchDaily(), bqFetchBreakdown(), bqFetchParams(), bqFetchFunnel(), bqFetchUsers()]);
+        try {
+          await run();
+        } catch (e) {
+          // ストリーミングがオフだと events_intraday_* が1つもなくエラーになる。外してやり直す
+          if (bqUseIntraday && /does not match any table/i.test(e.message)) {
+            bqUseIntraday = false;
+            document.getElementById("bq-intraday").checked = false;
+            showWarning("events_intraday_ のテーブルがないため、今日の分を外して取得しました。ストリーミングエクスポートがオフのときはこうなります。");
+            bqBytes = 0;
+            try {
+              await run();
+            } catch (e2) {
+              showError(e2.message);
+            }
+          } else {
+            showError(e.message);
+          }
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "取得";
+          const usd = (bqBytes / 2 ** 40) * PRICE_PER_TIB;
+          document.getElementById("bq-cost").textContent = `処理量の合計 ${fmtBytes(bqBytes)}（約 ${usd.toFixed(5)} ドル。毎月 1TiB までは無料）`;
+        }
+      }
+
+      async function bqFetchKpis() {
+        const sql =
+          cte() +
+          `SELECT
+  COUNT(DISTINCT user_pseudo_id) AS users,
+  COUNT(DISTINCT CONCAT(user_pseudo_id, '-', CAST(
+    (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id') AS STRING))) AS sessions,
+  COUNTIF(event_name = 'page_view') AS pageviews,
+  COUNT(*) AS events
+FROM ev`;
+        const [r = {}] = await runQuery(sql, "bq-sql-kpi");
+        setNum("bq-kpi-users", r.users);
+        setNum("bq-kpi-sessions", r.sessions);
+        setNum("bq-kpi-pv", r.pageviews);
+        setNum("bq-kpi-events", r.events);
+      }
+
+      async function bqFetchDaily() {
+        const sql =
+          cte() +
+          `SELECT event_date, COUNT(*) AS events, COUNT(DISTINCT user_pseudo_id) AS users
+FROM ev
+GROUP BY event_date
+ORDER BY event_date`;
+        const rows = await runQuery(sql, "bq-sql-daily");
+        if (bqChart) bqChart.destroy();
+        bqChart = new Chart(document.getElementById("bq-chart"), {
+          type: "line",
+          data: {
+            labels: rows.map((r) => r.event_date.replace(/(\d{4})(\d{2})(\d{2})/, "$2/$3")),
+            datasets: [
+              { label: "イベント", data: rows.map((r) => +r.events), borderColor: "#2f5bb0", tension: 0.25 },
+              { label: "ユーザー", data: rows.map((r) => +r.users), borderColor: "#1d6b4c", tension: 0.25 },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: "bottom" } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+          },
+        });
+      }
+
+      // 切り口別の表。SQL と表の見出しを切り口ごとに定義する
+      const BQ_DIMS = {
+        source: {
+          note: "04章で GTM の Google タグに付けた tag_source = gtm で見分けます。値がない行は gtag.js 直書きのテストサイトです。",
+          head: ["送信元", "イベント", "ユーザー"],
+          sql: `SELECT ${SOURCE} AS k, COUNT(*) AS a, COUNT(DISTINCT user_pseudo_id) AS b
+FROM ev GROUP BY k ORDER BY a DESC`,
+          label: (k) => (k === "gtm" ? "GTM（GTM 練習ページ）" : k === "gtag.js" ? "gtag.js（テストサイト）" : k),
+        },
+        event: {
+          note: "件数の多い順です。2列目は、そのうち GTM 経由（tag_source = gtm）の件数です。",
+          head: ["event_name", "イベント", "うち GTM"],
+          sql: `SELECT event_name AS k, COUNT(*) AS a, COUNTIF(${SOURCE} = 'gtm') AS b
+FROM ev GROUP BY k ORDER BY a DESC LIMIT 15`,
+          label: (k) => k,
+        },
+        plan: {
+          note: "user_properties の plan です。GTM 練習ページは user_properties を送っていないので「(未設定)」になります。",
+          head: ["plan", "イベント", "ユーザー"],
+          sql: `SELECT IFNULL((SELECT value.string_value FROM UNNEST(user_properties) WHERE key = 'plan'), '(未設定)') AS k,
+  COUNT(*) AS a, COUNT(DISTINCT user_pseudo_id) AS b
+FROM ev GROUP BY k ORDER BY a DESC`,
+          label: (k) => k,
+        },
+      };
+
+      async function bqFetchBreakdown() {
+        const d = BQ_DIMS[document.getElementById("bq-dim").value];
+        document.getElementById("bq-dim-note").textContent = d.note;
+        try {
+          const rows = await runQuery(cte() + d.sql, "bq-sql-dim");
+          renderTable(
+            "bq-tbl-dim",
+            d.head,
+            rows.map((r) => ({ cells: [esc(d.label(r.k)), num(r.a), num(r.b)], bar: +r.a })),
+            { barCol: 1 },
+          );
+        } catch (e) {
+          if (!bqFetchingAll()) showError(e.message);
+          else throw e;
+        }
+      }
+
+      async function bqFetchParams() {
+        const key = document.getElementById("bq-key").value; // 選択肢からだけ選ぶので SQL に埋め込んでよい
+        const sql =
+          cte() +
+          `SELECT
+  event_name,
+  COALESCE(p.value.string_value, CAST(p.value.int_value AS STRING),
+           CAST(p.value.double_value AS STRING)) AS value,
+  COUNT(*) AS cnt
+FROM ev, UNNEST(event_params) AS p
+WHERE p.key = '${key}'
+GROUP BY event_name, value
+ORDER BY cnt DESC
+LIMIT 20`;
+        try {
+          const rows = await runQuery(sql, "bq-sql-params");
+          renderTable(
+            "bq-tbl-params",
+            ["event_name", "値", "件数"],
+            rows.map((r) => ({ cells: [`<code>${esc(r.event_name)}</code>`, esc(r.value ?? "(null)"), num(r.cnt)], bar: +r.cnt })),
+            { barCol: 2, numeric: [2], empty: `この期間に ${key} を送ったイベントはありません。` },
+          );
+        } catch (e) {
+          if (!bqFetchingAll()) showError(e.message);
+          else throw e;
+        }
+      }
+
+      async function bqFetchFunnel() {
+        const sql =
+          cte() +
+          `, steps AS (
+  SELECT
+    user_pseudo_id,
+    MIN(IF(event_name = 'view_item', event_timestamp, NULL)) AS t_view,
+    MIN(IF(event_name = 'add_to_cart', event_timestamp, NULL)) AS t_cart,
+    MIN(IF(event_name = 'purchase', event_timestamp, NULL)) AS t_purchase
+  FROM ev
+  GROUP BY user_pseudo_id
+)
+SELECT
+  COUNTIF(t_view IS NOT NULL) AS step1,
+  COUNTIF(t_cart > t_view) AS step2,
+  COUNTIF(t_purchase > t_cart AND t_cart > t_view) AS step3
+FROM steps`;
+        const [r = {}] = await runQuery(sql, "bq-sql-funnel");
+        const base = +r.step1 || 0;
+        const pct = (n) => (base ? Math.round((n / base) * 100) + "%" : "—");
+        const steps = [
+          ["1. view_item（商品を見た）", +r.step1 || 0],
+          ["2. add_to_cart（カートに入れた）", +r.step2 || 0],
+          ["3. purchase（購入した）", +r.step3 || 0],
+        ];
+        renderTable(
+          "bq-tbl-funnel",
+          ["ステップ", "ユーザー", "ステップ1からの割合"],
+          steps.map(([s, n]) => ({ cells: [esc(s), num(n), pct(n)], bar: n })),
+          { barCol: 1 },
+        );
+      }
+
+      async function bqFetchUsers() {
+        const sql =
+          cte() +
+          `SELECT user_id, COUNT(*) AS events, MAX(event_timestamp) AS last_ts
+FROM ev
+WHERE user_id IS NOT NULL
+GROUP BY user_id
+ORDER BY last_ts DESC
+LIMIT 20`;
+        const rows = await runQuery(sql, "bq-sql-users");
+        const sel = document.getElementById("bq-user");
+        const cur = sel.value;
+        sel.innerHTML =
+          '<option value="">user_id を選ぶ</option>' +
+          rows.map((r) => `<option value="${esc(r.user_id)}">${esc(r.user_id)}（${r.events}件）</option>`).join("");
+        if (rows.some((r) => r.user_id === cur)) {
+          sel.value = cur;
+          await bqFetchTimeline();
+        }
+      }
+
+      async function bqFetchTimeline() {
+        const id = document.getElementById("bq-user").value;
+        const box = document.getElementById("bq-tbl-timeline");
+        if (!id) {
+          box.innerHTML = '<p class="empty">上で user_id を選ぶと表示します。</p>';
+          return;
+        }
+        if (!/^[\w-]+$/.test(id)) return showError("user_id に使えない文字が含まれています");
+        const sql =
+          cte() +
+          `SELECT
+  FORMAT_DATETIME('%m/%d %H:%M:%S', DATETIME(TIMESTAMP_MICROS(event_timestamp), 'Asia/Tokyo')) AS jst,
+  event_name,
+  ${P("page_title")} AS page_title,
+  COALESCE(${P("button_name")}, ${P("item_name")}, ${P("method")}, ${P("form_id")}) AS detail
+FROM ev
+WHERE user_id = '${id}'
+ORDER BY event_timestamp DESC
+LIMIT 100`;
+        try {
+          const rows = await runQuery(sql, "bq-sql-timeline");
+          renderTable(
+            "bq-tbl-timeline",
+            ["日時（日本時間）", "event_name", "ページ", "詳細"],
+            rows.map((r) => ({ cells: [esc(r.jst), `<code>${esc(r.event_name)}</code>`, esc(r.page_title ?? ""), esc(r.detail ?? "")] })),
+            { numeric: [] },
+          );
+        } catch (e) {
+          showError(e.message);
+        }
+      }
+
+      // 「取得」ボタンでまとめて取っている最中か。最中なら、エラーは bqFetchAll にまとめて任せる
+      const bqFetchingAll = () => document.getElementById("bq-btn").disabled;
+
+      // ================= 表示の部品 =================
+      // rows: [{cells: [...], bar: 数値, id, cls}]。opts.barCol: 横棒を付ける列、opts.numeric: 右寄せする列
+      function renderTable(id, headers, rows, opts = {}) {
+        const box = document.getElementById(id);
+        if (!rows.length) {
+          box.innerHTML = `<p class="empty">${opts.empty || "この期間のデータはありません。"}</p>`;
+          return;
+        }
+        const numeric = opts.numeric ?? headers.map((_, i) => i).filter((i) => i > 0);
+        const max = Math.max(...rows.map((r) => r.bar || 0), 1);
+        const head = headers.map((h, i) => `<th class="${numeric.includes(i) ? "num" : ""}">${h}</th>`).join("");
+        const body = rows
+          .map((r) => {
+            const cells = [...r.cells];
+            if (opts.barCol != null) {
+              const w = Math.round(((r.bar || 0) / max) * 80);
+              cells[opts.barCol] = `<span class="bar" style="width:${w}px"></span>${cells[opts.barCol]}`;
+            }
+            const attrs = r.id != null ? ` class="${r.cls || ""}" data-id="${esc(r.id)}"` : "";
+            return `<tr${attrs}>${cells.map((c, i) => `<td class="${numeric.includes(i) ? "num" : ""}">${c}</td>`).join("")}</tr>`;
+          })
+          .join("");
+        box.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+        if (opts.onRowClick) box.querySelectorAll("tr[data-id]").forEach((tr) => (tr.onclick = () => opts.onRowClick(tr.dataset.id)));
+      }
+
+      const num = (v) => Number(v || 0).toLocaleString();
+      const setNum = (id, v) => (document.getElementById(id).textContent = num(v));
+      function fmtBytes(b) {
+        if (b < 1024) return b + " B";
+        if (b < 1024 ** 2) return (b / 1024).toFixed(1) + " KB";
+        if (b < 1024 ** 3) return (b / 1024 ** 2).toFixed(1) + " MB";
+        return (b / 1024 ** 3).toFixed(2) + " GB";
+      }
+      function esc(s) {
+        return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+      }
+      function showError(msg) {
+        let hint = "";
+        if (/customUser|not.*valid dimension|invalid/i.test(msg)) {
+          hint = " → app_user_id / user_pattern / plan がユーザースコープのカスタムディメンションとして登録されているか確認してください（管理 › データの表示 › カスタム定義）。";
+        } else if (/403|permission|disabled|has not been used/i.test(msg)) {
+          hint = " → GCP で BigQuery API と Google Analytics Data API を有効にし、OAuth 同意画面に両方のスコープを追加してください。";
+        }
+        const el = document.getElementById("error");
+        el.textContent = "エラー: " + msg + hint;
+        el.hidden = false;
+      }
+      function showWarning(msg) {
+        const el = document.getElementById("warning");
+        el.textContent = msg;
+        el.hidden = false;
+      }
+      function hideMessages() {
+        document.getElementById("error").hidden = true;
+        document.getElementById("warning").hidden = true;
+      }
+
+      start();
+    </script>
+  </body>
+</html>

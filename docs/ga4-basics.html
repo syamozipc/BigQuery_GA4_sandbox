@@ -27,7 +27,7 @@
 <a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
 <a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
 </nav>
-<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
+<div class="side-links"><p>サイト</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">トップ</a><p>データを送る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtag.html">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtm.html">GTM 練習ページ</a><p>データを見る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/analytics.html">分析</a></div>
 </aside>
 <main>
 <div class="content">
@@ -51,7 +51,7 @@
 <p>旧 Google アナリティクス（UA）は「ページビュー」「イベント」「トランザクション」など種類の違うヒットを記録していました。GA4 ではページビューもスクロールも購入も、すべて同じ形の<strong>イベント</strong>です。1つのイベントは次の要素でできています。</p>
 
 <div class="table-wrap"><table>
-<thead><tr><th>要素</th><th>例（このリポジトリの index.html）</th><th>誰が付けるか</th></tr></thead>
+<thead><tr><th>要素</th><th>例（このリポジトリの send-gtag.html）</th><th>誰が付けるか</th></tr></thead>
 <tbody>
 <tr><td>イベント名</td><td><code>button_click</code></td><td>自分</td></tr>
 <tr><td>イベントパラメータ</td><td><code>button_name: "資料ダウンロード"</code>, <code>section: "hero"</code></td><td>自分</td></tr>
@@ -61,7 +61,7 @@
 <tr><td>端末・地域など</td><td>ブラウザ、OS、国、市区町村、流入元</td><td>GA4 が自動で付与</td></tr>
 </tbody></table></div>
 
-<p>index.html のボタンを押したときに実際に動いているコードはこれだけです。</p>
+<p>send-gtag.html のボタンを押したときに実際に動いているコードはこれだけです。</p>
 <pre data-lang="javascript"><code>gtag("event", "button_click", {
   button_name: "資料ダウンロード",
   section: "hero",
@@ -126,7 +126,7 @@
 <p>セッションは「ひと続きの訪問」です。最後の操作から30分（既定）何もしないと切れます。各イベントには <code>ga_session_id</code>（セッション開始時刻）と <code>ga_session_number</code>（何回目の訪問か）が自動で付きます。BigQuery では <code>user_pseudo_id</code> と <code>ga_session_id</code> の組み合わせで1セッションを数えます（06章）。</p>
 
 <h3 id="userid">このリポジトリでの実践: user_id と user_properties</h3>
-<p>index.html は仮ユーザーのUUIDを2通りの形で送っています。値は同じでも役割と使える場所が違います。</p>
+<p>send-gtag.html は仮ユーザーのUUIDを2通りの形で送っています。値は同じでも役割と使える場所が違います。</p>
 <div class="table-wrap"><table>
 <thead><tr><th></th><th><code>user_id</code></th><th><code>user_properties</code></th></tr></thead>
 <tbody>
@@ -149,7 +149,7 @@ gtag("config", "G-FEHSK6QJLE", { user_id: uuid });</code></pre>
 </ul>
 
 <h2 id="implement">計測を実装する3つの方法</h2>
-<h3>1. gtag.js を直書きする（index.html の方式）</h3>
+<h3>1. gtag.js を直書きする（send-gtag.html の方式）</h3>
 <p>すべてのページの <code>&lt;head&gt;</code> に次を入れます。<code>gtag()</code> は引数を <code>dataLayer</code> に積むだけの小さな関数で、読み込まれた gtag.js がそれを読んで送信します。</p>
 <pre data-lang="html"><code>&lt;script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"&gt;&lt;/script&gt;
 &lt;script&gt;
@@ -161,14 +161,14 @@ gtag("config", "G-FEHSK6QJLE", { user_id: uuid });</code></pre>
 <p>カスタムイベントは <code>gtag("event", イベント名, パラメータ)</code> で送ります。</p>
 <pre data-lang="javascript"><code>gtag("event", "button_click", { button_name: "購入ボタン" });</code></pre>
 
-<h3>2. Google タグマネージャー（GTM）を使う（gtm.html の方式）</h3>
+<h3>2. Google タグマネージャー（GTM）を使う（send-gtm.html の方式）</h3>
 <p>ページには GTM のコンテナを1つ入れるだけにして、「どのクリックで何を送るか」を GTM の管理画面で設定します。コードを変えずに計測を追加・修正できます。詳しくは 03・04章で扱います。</p>
 
 <h3>3. Measurement Protocol（サーバーから送る）</h3>
 <p>決済完了や解約など、サーバー側で確定する出来事を HTTP で直接 GA4 に送る方法です。<span class="ui-path"><span>管理</span><span>データの収集と修正</span><span>データストリーム</span><span>Measurement Protocol API secret</span></span> でシークレットを発行して使います。ブラウザ計測の補完として使うもので、このリポジトリでは扱いません。</p>
 
 <div class="callout warn"><span class="label">二重計測に注意</span>
-<p>gtag.js の直書きと、同じ測定IDの Google タグを入れた GTM を同じページに置くと、<code>page_view</code> などが2回ずつ送られます。どちらか一方に寄せます。このリポジトリでは index.html が gtag.js、gtm.html が GTM と、ページを分けています。</p></div>
+<p>gtag.js の直書きと、同じ測定IDの Google タグを入れた GTM を同じページに置くと、<code>page_view</code> などが2回ずつ送られます。どちらか一方に寄せます。このリポジトリでは send-gtag.html が gtag.js、send-gtm.html が GTM と、ページを分けています。</p></div>
 
 <h2 id="ui">GA4 画面の見取り図</h2>
 <div class="table-wrap"><table>
@@ -207,7 +207,7 @@ gtag("config", "G-FEHSK6QJLE", { user_id: uuid });</code></pre>
 
 <h2 id="check">確認テスト</h2>
 <p>答えられたらチェックを入れます。</p>
-<label class="check"><input type="checkbox" id="q-event"> index.html の「カートに追加」ボタンで送られるイベント名とパラメータを言える（ヒント: ソースの <code>sendEvent('add_to_cart', …)</code>）。</label>
+<label class="check"><input type="checkbox" id="q-event"> send-gtag.html の「カートに追加」ボタンで送られるイベント名とパラメータを言える（ヒント: ソースの <code>sendEvent('add_to_cart', …)</code>）。</label>
 <label class="check"><input type="checkbox" id="q-scope"> <code>plan</code> を<strong>イベント</strong>スコープではなく<strong>ユーザー</strong>スコープで登録する理由を説明できる。</label>
 <label class="check"><input type="checkbox" id="q-id"> <code>user_pseudo_id</code> と <code>user_id</code> の違いと、User-ID でレポートを絞り込めない理由を説明できる。</label>
 <label class="check"><input type="checkbox" id="q-double"> gtag.js と GTM を同じページに入れると何が起きるか説明できる。</label>

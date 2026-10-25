@@ -370,49 +370,8 @@
         padding: 24px 16px 40px;
       }
 
-      /* サイト共通のメニュー（index / gtm / dashboard / realtime で同じ） */
-      .site-nav {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 4px 6px;
-        background: #1c2738;
-        padding: 8px max(16px, 3vw);
-        font-size: 13px;
-        line-height: 1.6;
-      }
-      .site-nav a {
-        color: #c9d4e6;
-        text-decoration: none;
-        padding: 3px 10px;
-        border-radius: 6px;
-        white-space: nowrap;
-      }
-      .site-nav a:hover {
-        background: #2c3a52;
-        color: #fff;
-      }
-      .site-nav a[aria-current="page"] {
-        background: #fff;
-        color: #1c2738;
-        font-weight: 700;
-      }
-      .site-nav .site-brand {
-        color: #fff;
-        font-weight: 700;
-        margin-right: 6px;
-      }
-      .site-nav .site-group {
-        color: #8a9ab4;
-        font-size: 11px;
-        letter-spacing: 0.08em;
-        margin-left: 8px;
-      }
-      .site-nav .site-guide {
-        margin-left: auto;
-        border: 1px solid #42526e;
-      }
     </style>
+    <link rel="stylesheet" href="./assets/site.css" />
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->
@@ -426,13 +385,12 @@
     ></noscript>
     <!-- End Google Tag Manager (noscript) -->
     <div class="site-nav" role="navigation" aria-label="サイト内のページ">
-      <span class="site-brand">GA4・GTM・BigQuery サンドボックス</span>
-      <span class="site-group">送る</span>
-      <a href="./">テストサイト（gtag.js）</a>
-      <a href="./gtm.html" aria-current="page">GTM 練習ページ</a>
-      <span class="site-group">見る</span>
-      <a href="./dashboard.html">BigQuery ダッシュボード</a>
-      <a href="./realtime.html">リアルタイム ダッシュボード</a>
+      <a class="site-brand" href="./">GA4・GTM・BigQuery サンドボックス</a>
+      <span class="site-group">データを送る</span>
+      <a href="./send-gtag.html">テストサイト（gtag.js）</a>
+      <a href="./send-gtm.html" aria-current="page">GTM 練習ページ</a>
+      <span class="site-group">データを見る</span>
+      <a href="./analytics.html">分析</a>
       <a class="site-guide" href="./docs/" target="_blank" rel="noopener">学習ガイド</a>
     </div>
     <header>
@@ -451,7 +409,7 @@
         <section class="card" aria-labelledby="h-container">
           <h2 id="h-container">GTM コンテナ</h2>
           <p>
-            このページは GTM コンテナ <code>GTM-KXV4CBBD</code> を読み込みます。別のコンテナで試すときは、gtm.html の
+            このページは GTM コンテナ <code>GTM-KXV4CBBD</code> を読み込みます。別のコンテナで試すときは、send-gtm.html の
             <code>GTM_ID</code> と noscript の id を書き換えます。
           </p>
           <div class="row">

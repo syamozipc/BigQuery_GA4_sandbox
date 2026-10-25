@@ -27,7 +27,7 @@
 <a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
 <a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
 </nav>
-<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
+<div class="side-links"><p>サイト</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">トップ</a><p>データを送る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtag.html">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtm.html">GTM 練習ページ</a><p>データを見る</p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/analytics.html">分析</a></div>
 </aside>
 <main>
 <div class="content">
@@ -52,7 +52,7 @@
 <svg viewBox="0 0 830 230" role="img" aria-label="送ったパラメータはGA4に全部届くが、画面で使えるのはカスタム定義に登録したものだけ。BigQueryには登録なしで全部出る">
 <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="head"/></marker></defs>
 <rect class="box" x="20" y="80" width="150" height="70" rx="8"/>
-<text class="t" x="95" y="108" text-anchor="middle">index.html</text>
+<text class="t" x="95" y="108" text-anchor="middle">send-gtag.html</text>
 <text class="sm" x="95" y="130" text-anchor="middle">button_name</text>
 <rect class="box" x="230" y="80" width="150" height="70" rx="8"/>
 <text class="t" x="305" y="108" text-anchor="middle">GA4 に保存</text>
@@ -80,7 +80,7 @@
 <p>ただし <code>method</code> など既定ディメンションと同じ名前のパラメータは、登録しなくても見えます。</p>
 
 <h2 id="inventory">送っているパラメータの棚卸し</h2>
-<p>index.html のソースから、自分で送っている値を拾い出すとこうなります。登録するスコープもここで決めておきます。</p>
+<p>send-gtag.html のソースから、自分で送っている値を拾い出すとこうなります。登録するスコープもここで決めておきます。</p>
 <div class="table-wrap"><table>
 <thead><tr><th>キー</th><th>種類</th><th>例</th><th>送っているイベント</th><th>登録するスコープ</th></tr></thead>
 <tbody>
@@ -96,12 +96,12 @@
 <tr><td><code>user_pattern</code></td><td>ユーザープロパティ（イベントパラメータにも同じ値）</td><td>b</td><td>全イベント</td><td>ユーザー</td></tr>
 </tbody></table></div>
 <div class="callout tip"><span class="label">補足</span>
-<p>リアルタイム ダッシュボード（realtime.html）は、<code>customUser:app_user_id</code>・<code>customUser:user_pattern</code>・<code>customUser:plan</code> を Data API で参照しています。この3つがユーザースコープで登録済みであることが前提です（07章）。</p></div>
+<p>分析ページの「リアルタイム」タブは、<code>customUser:app_user_id</code>・<code>customUser:user_pattern</code>・<code>customUser:plan</code> を Data API で参照しています。この3つがユーザースコープで登録済みであることが前提です（07章）。</p></div>
 
 <h2 id="send">イベントを送って届いたか確かめる</h2>
 <ol class="steps">
 <li><h4>テストサイトで操作する</h4>
-<p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/">テストサイト</a>を開き、仮ユーザーで「B: 有料プラン / リピーター」を選びます。「資料ダウンロード」を3回、「商品一覧」タブで「プロプラン 詳細」を2回押します。</p>
+<p><a href="https://syamozipc.github.io/GA4_GTM_BigQuery_sandbox/send-gtag.html">テストサイト</a>を開き、仮ユーザーで「B: 有料プラン / リピーター」を選びます。「資料ダウンロード」を3回、「商品一覧」タブで「プロプラン 詳細」を2回押します。</p>
 <label class="check"><input type="checkbox" id="s-send"> パターンBでイベントを送った</label></li>
 <li><h4>リアルタイムで生のパラメータを見る</h4>
 <p><span class="ui-path"><span>レポート</span><span>リアルタイムの概要</span></span> の「イベント数（イベント名）」カードで、イベント名、パラメータ名の順に押すと値が出ます。登録前でも見られます。</p>
@@ -178,7 +178,7 @@
 <tr><td>ユーザー個別のイベント履歴</td><td>探索のユーザーエクスプローラ</td><td>数時間</td></tr>
 <tr><td>通常レポートでの集計</td><td>レポートのエンゲージメント › イベント</td><td>最大24〜48時間</td></tr>
 </tbody></table></div>
-<p>リアルタイムは過去30分固定で、カードの種類も決まっています。任意のディメンションと指標を組み合わせたいときは Data API を使います（07章のリアルタイム ダッシュボード）。</p>
+<p>リアルタイムは過去30分固定で、カードの種類も決まっています。任意のディメンションと指標を組み合わせたいときは Data API を使います（07章、分析ページの「リアルタイム」タブ）。</p>
 
 <h2 id="explore">探索で表を作る（翌日以降）</h2>
 <ol class="steps">
