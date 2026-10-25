@@ -369,6 +369,49 @@
         color: #90a4ae;
         padding: 24px 16px 40px;
       }
+
+      /* サイト共通のメニュー（index / gtm / dashboard / realtime で同じ） */
+      .site-nav {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 6px;
+        background: #1c2738;
+        padding: 8px max(16px, 3vw);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .site-nav a {
+        color: #c9d4e6;
+        text-decoration: none;
+        padding: 3px 10px;
+        border-radius: 6px;
+        white-space: nowrap;
+      }
+      .site-nav a:hover {
+        background: #2c3a52;
+        color: #fff;
+      }
+      .site-nav a[aria-current="page"] {
+        background: #fff;
+        color: #1c2738;
+        font-weight: 700;
+      }
+      .site-nav .site-brand {
+        color: #fff;
+        font-weight: 700;
+        margin-right: 6px;
+      }
+      .site-nav .site-group {
+        color: #8a9ab4;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        margin-left: 8px;
+      }
+      .site-nav .site-guide {
+        margin-left: auto;
+        border: 1px solid #42526e;
+      }
     </style>
   </head>
   <body>
@@ -382,14 +425,23 @@
       ></iframe
     ></noscript>
     <!-- End Google Tag Manager (noscript) -->
+    <div class="site-nav" role="navigation" aria-label="サイト内のページ">
+      <span class="site-brand">GA4 サンドボックス</span>
+      <span class="site-group">送る</span>
+      <a href="./">テストサイト（gtag.js）</a>
+      <a href="./gtm.html" aria-current="page">GTM 練習ページ</a>
+      <span class="site-group">見る</span>
+      <a href="./dashboard.html">BigQuery ダッシュボード</a>
+      <a href="./realtime.html">リアルタイム ダッシュボード</a>
+      <a class="site-guide" href="./docs/" target="_blank" rel="noopener">学習ガイド</a>
+    </div>
     <header>
       <div>
         <h1>GTM 練習ページ</h1>
         <p>gtag.js は入っていません。計測はすべて GTM の設定で行います。</p>
       </div>
       <nav>
-        <a href="./">テストサイト（gtag.js）</a>
-        <a href="./docs/gtm-tutorial.html">手順（04章）</a>
+        <a href="./docs/gtm-tutorial.html" target="_blank" rel="noopener">ガイド 04章</a>
       </nav>
     </header>
 

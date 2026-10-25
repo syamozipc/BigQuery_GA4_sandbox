@@ -26,27 +26,33 @@ GA4・GTM・BigQuery を包括的に学ぶためのリポジトリ。
 
 ---
 
-## 構成
+## サイトの構成
+
+学習ガイドと4つの練習用ページでできている。練習用ページは、GA4 にデータを **送る** 2ページと、届いたデータを **見る** 2ページに分かれる。どのページも上部の共通メニューで行き来できる。
+
+| 役割 | ページ | 何をするか | 使う章 |
+| --- | --- | --- | --- |
+| 送る | [テストサイト（gtag.js）](https://syamozipc.github.io/BigQuery_GA4_sandbox/) `index.html` | gtag.js 直書きでイベントを送る。仮ユーザーの切り替え付き | 01・02 |
+| 送る | [GTM 練習ページ](https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html) `gtm.html` | GTM 経由でイベントを送る。dataLayer の中身を表示 | 03・04 |
+| 見る | [BigQuery ダッシュボード](https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html) `dashboard.html` | BigQuery の生データを SQL で集計。実行した SQL と処理量も表示 | 05〜07 |
+| 見る | [リアルタイム ダッシュボード](https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html) `realtime.html` | GA4 Data API で過去30分を集計。送ったリクエストも表示 | 07 |
 
 ```
 /
-├── index.html        # テストサイト（gtag.js 直書き。仮ユーザーIDの切り替え付き）
-├── gtm.html          # GTM 練習用ページ（gtag.js なし。GTM コンテナ GTM-KXV4CBBD を読み込む）
-├── dashboard.html    # BigQuery のデータを表示するダッシュボード（翌日以降）
-├── realtime.html     # GA4 Data API で過去30分をユーザー単位で表示
+├── index.html        # 送る: テストサイト（gtag.js）
+├── gtm.html          # 送る: GTM 練習ページ（GTM-KXV4CBBD）
+├── dashboard.html    # 見る: BigQuery ダッシュボード
+├── realtime.html     # 見る: リアルタイム ダッシュボード
 └── docs/             # 学習ガイド（00〜07章）
     └── assets/       # ガイド共通の CSS / JS
 ```
 
-| ページ | URL |
+| 外部の管理画面 | URL |
 | --- | --- |
-| テストサイト | https://syamozipc.github.io/BigQuery_GA4_sandbox/ |
-| GTM 練習ページ | https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html |
-| ダッシュボード | https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html |
-| リアルタイムダッシュボード | https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html |
-| Looker Studio | https://lookerstudio.google.com/reporting/3c89940d-f869-47be-a135-97fee528fcda/page/j5EuF |
+| Google Analytics | https://analytics.google.com/analytics/web/#/a235761773p324810718/reports/intelligenthome |
+| Google タグマネージャー | https://tagmanager.google.com/ （コンテナ GTM-KXV4CBBD） |
 | BigQuery | https://console.cloud.google.com/bigquery?project=big-query-sample-492309 |
-| Google Analytics | https://analytics.google.com/analytics/web/#/a235761773p324810718/reports/intelligenthome?params=_u..nav%3Dmaui |
+| Looker Studio | https://lookerstudio.google.com/reporting/3da2a9b6-1aa5-4c50-b2c1-fafaf4a64cdc/page/zB4BG |
 
 ### gtm.html の使い方
 
@@ -88,6 +94,7 @@ GTM コンテナ `GTM-KXV4CBBD` を読み込む。別のコンテナで試すと
 | データセット     | `analytics_324810718`     |
 | GA4 測定ID       | `G-FEHSK6QJLE`            |
 | GA4 プロパティID | `324810718`               |
+| GTM コンテナID   | `GTM-KXV4CBBD`            |
 | リージョン       | `asia-northeast1`（東京） |
 
 ---

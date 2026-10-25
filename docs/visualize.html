@@ -27,20 +27,20 @@
 <a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
 <a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
 </nav>
-<div class="side-links"><p>練習用のページ</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム</a></div>
+<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
 </aside>
 <main>
 <div class="content">
 <div class="kicker"><span class="chip">07</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-bq">BigQuery</span><span class="chip t-ga4">GA4</span></div>
 <h1>可視化とAPI</h1>
-<p class="lead">集めたデータを人に見せる方法は、GA4 の画面のほかに3つあります。Looker Studio、BigQuery API で作る自作ダッシュボード（dashboard.html）、GA4 Data API で作るリアルタイム画面（realtime.html）です。それぞれの仕組みと向き不向きを整理します。</p>
+<p class="lead">集めたデータを人に見せる方法は、GA4 の画面のほかに3つあります。Looker Studio、BigQuery API で作る BigQuery ダッシュボード（dashboard.html）、GA4 Data API で作るリアルタイム ダッシュボード（realtime.html）です。それぞれの仕組みと向き不向きを整理します。</p>
 
 <div class="toc"><p>この章の内容</p><ol>
 <li><a href="#choose">どれを使うか</a></li>
 <li><a href="#looker">Looker Studio</a></li>
 <li><a href="#auth">ブラウザから Google API を呼ぶ準備</a></li>
-<li><a href="#dashboard">dashboard.html（BigQuery API）</a></li>
-<li><a href="#realtime">realtime.html（GA4 Data API）</a></li>
+<li><a href="#dashboard">BigQuery ダッシュボード（BigQuery API）</a></li>
+<li><a href="#realtime">リアルタイム ダッシュボード（GA4 Data API）</a></li>
 </ol></div>
 
 <h2 id="choose">どれを使うか</h2>
@@ -50,12 +50,12 @@
 <tr><td>GA4 の画面</td><td>数秒〜48時間</td><td>低い（登録したディメンションのみ）</td><td>無料</td><td>日々の確認</td></tr>
 <tr><td>Looker Studio + GA4 コネクタ</td><td>GA4 画面と同じ</td><td>中</td><td>無料</td><td>SQL なしで社内向けレポート</td></tr>
 <tr><td>Looker Studio + BigQuery</td><td>翌日（ストリーミングなら数分）</td><td>高い（SQL で何でも）</td><td>BigQuery のスキャン分</td><td>生データを使った社内ダッシュボード</td></tr>
-<tr><td>dashboard.html（BigQuery API）</td><td>同上</td><td>最も高い（画面も自作）</td><td>同上</td><td>業務システムへの組み込み</td></tr>
-<tr><td>realtime.html（Data API）</td><td>過去30分</td><td>中（GA4 の集計値を任意の組み合わせで）</td><td>無料（クォータあり）</td><td>リアルタイムの監視</td></tr>
+<tr><td>BigQuery ダッシュボード（dashboard.html）</td><td>同上</td><td>最も高い（画面も自作）</td><td>同上</td><td>業務システムへの組み込み</td></tr>
+<tr><td>リアルタイム ダッシュボード（realtime.html）</td><td>過去30分</td><td>中（GA4 の集計値を任意の組み合わせで）</td><td>無料（クォータあり）</td><td>リアルタイムの監視</td></tr>
 </tbody></table></div>
 
 <h2 id="looker">Looker Studio</h2>
-<p>Google が提供する無料の BI ツールです。BigQuery と直接つながり、ドラッグ＆ドロップでグラフや表を作れます。このリポジトリのレポートは<a href="https://lookerstudio.google.com/reporting/3c89940d-f869-47be-a135-97fee528fcda/page/j5EuF">こちら</a>です。</p>
+<p>Google が提供する無料の BI ツールです。BigQuery と直接つながり、ドラッグ＆ドロップでグラフや表を作れます。このリポジトリのレポートは<a href="https://lookerstudio.google.com/reporting/3da2a9b6-1aa5-4c50-b2c1-fafaf4a64cdc/page/zB4BG">こちら</a>です。</p>
 <ol class="steps">
 <li><h4>データソースをつなぐ</h4>
 <p><span class="ui-path"><span>作成</span><span>レポート</span></span> でデータソースに「BigQuery」を選び、プロジェクト・データセット・テーブルを指定します。GA4 のテーブルなら「マイプロジェクト」から <code>events_*</code> 相当の日付分割テーブルを選べます。</p></li>
@@ -109,8 +109,9 @@ client.requestAccessToken();</code></pre></li>
 <div class="callout warn"><span class="label">ブラウザ直叩きの限界</span>
 <p>ログインした人の権限で動くので、BigQuery や GA4 の閲覧権限がない人には何も表示されません。誰でも見られる画面にしたいときは、サーバー側でサービスアカウントを使って API を呼び、結果だけを返す構成にします。</p></div>
 
-<h2 id="dashboard">dashboard.html（BigQuery API）</h2>
-<p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">dashboard.html</a> は、BigQuery REST API の <code>jobs.query</code> に SQL を投げ、返ってきた行を Chart.js でグラフにしています。表示しているのは前日までの日次テーブルのデータです。</p>
+<h2 id="dashboard">BigQuery ダッシュボード（BigQuery API）</h2>
+<p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">BigQuery ダッシュボード</a>（dashboard.html）は、BigQuery REST API の <code>jobs.query</code> に SQL を投げ、返ってきた行を Chart.js でグラフにしています。表示しているのは日次テーブルのデータで、ストリーミングが有効なら今日の分（<code>events_intraday_</code>）も含められます。</p>
+<p>画面のカードは06章のレシピに対応しています。送信元の比較（gtag.js と GTM）、プラン別、イベント別、パラメータの値、ファネル、ユーザーの行動履歴です。各カードの「実行した SQL を見る」で、実際に投げた SQL と処理量が確かめられます。</p>
 <pre data-lang="javascript"><code>const res = await fetch(
   `https://bigquery.googleapis.com/bigquery/v2/projects/${PROJECT_ID}/queries`,
   {
@@ -125,7 +126,8 @@ const data = await res.json();
 <label class="check"><input type="checkbox" id="db-open"> dashboard.html にログインし、期間を変えて表示が変わるのを確認した</label>
 <label class="check"><input type="checkbox" id="db-sql"> dashboard.html のソースで KPI の SQL を読み、06章のレシピと対応づけた</label>
 
-<h2 id="realtime">realtime.html（GA4 Data API）</h2>
+<h2 id="realtime">リアルタイム ダッシュボード（GA4 Data API）</h2>
+<p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム ダッシュボード</a>（realtime.html）では、ページ別・イベント別・プラン別・パターン別・ユーザー別の表を出し、ユーザーを選ぶとすべてのカードがその人に絞られます。各カードの「送ったリクエストを見る」でリクエストの中身が、画面上部で1日のクォータの残りが確かめられます。</p>
 <p>GA4 の画面のリアルタイムは、過去30分固定・カード固定で、任意のディメンションと指標の組み合わせやセグメントは使えません。Data API の <code>runRealtimeReport</code> を直接呼ぶと、過去30分のデータを好きな組み合わせで取れます。無料です。</p>
 <pre data-lang="javascript"><code><span class="c">// ユーザースコープのカスタムディメンションは customUser: を付けて参照する</span>
 const res = await fetch(

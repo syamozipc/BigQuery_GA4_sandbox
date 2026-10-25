@@ -27,7 +27,7 @@
 <a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
 <a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
 </nav>
-<div class="side-links"><p>練習用のページ</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム</a></div>
+<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
 </aside>
 <main>
 <div class="content">
@@ -38,7 +38,7 @@
 <div class="toc"><p>このページの内容</p><ol>
 <li><a href="#flow">データの流れ（全体像）</a></li>
 <li><a href="#roadmap">学習ロードマップ</a></li>
-<li><a href="#repo">このリポジトリの構成</a></li>
+<li><a href="#repo">サイトの構成</a></li>
 <li><a href="#resources">GCP / GA4 のリソース情報</a></li>
 <li><a href="#glossary">用語集</a></li>
 </ol></div>
@@ -142,29 +142,36 @@
 <a class="card" href="visualize.html"><div class="top"><span class="no">07</span><span class="chip kind-hands">ハンズオン</span><span class="chip t-bq">BigQuery</span><span class="chip t-ga4">GA4</span></div><h3>可視化とAPI</h3><p>Looker Studio、BigQuery API で作る dashboard.html、GA4 Data API で作る realtime.html の仕組みと使い分け。</p><span class="prog" data-progress="visualize"></span></a>
 </div>
 
-<h2 id="repo">このリポジトリの構成</h2>
-<pre data-lang="tree"><code>/
-├── index.html        <span class="c"># テストサイト（gtag.js 直書き。仮ユーザーIDの切り替え付き）</span>
-├── gtm.html          <span class="c"># GTM 練習用ページ（gtag.js なし。GTM コンテナ GTM-KXV4CBBD を読み込む）</span>
-├── dashboard.html    <span class="c"># BigQuery のデータを表示するダッシュボード（翌日以降のデータ）</span>
-├── realtime.html     <span class="c"># GA4 Data API で過去30分をユーザー単位で表示</span>
-├── docs/             <span class="c"># この学習ガイド</span>
-│   ├── index.html    <span class="c"># 00 全体像とロードマップ（このページ）</span>
-│   ├── ga4-basics.html ... visualize.html
-│   └── assets/       <span class="c"># ガイド共通の CSS / JS</span>
-└── README.md         <span class="c"># 入口。各章へのリンク</span></code></pre>
-
+<h2 id="repo">サイトの構成</h2>
+<p>このサイトは、学習ガイドと4つの練習用ページでできています。練習用ページは、GA4 にデータを<strong>送る</strong>2ページと、届いたデータを<strong>見る</strong>2ページに分かれます。どのページも、上部の共通メニューで行き来できます。</p>
 <div class="table-wrap"><table>
-<thead><tr><th>ページ</th><th>公開URL</th></tr></thead>
+<thead><tr><th>役割</th><th>ページ</th><th>何をするか</th><th>使う章</th></tr></thead>
 <tbody>
-<tr><td>テストサイト</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">syamozipc.github.io/BigQuery_GA4_sandbox/</a></td></tr>
-<tr><td>GTM 練習ページ</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">…/gtm.html</a></td></tr>
-<tr><td>ダッシュボード</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">…/dashboard.html</a></td></tr>
-<tr><td>リアルタイム</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">…/realtime.html</a></td></tr>
-<tr><td>学習ガイド</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/docs/">…/docs/</a></td></tr>
-<tr><td>Looker Studio</td><td><a href="https://lookerstudio.google.com/reporting/3c89940d-f869-47be-a135-97fee528fcda/page/j5EuF">レポートを開く</a></td></tr>
-<tr><td>BigQuery</td><td><a href="https://console.cloud.google.com/bigquery?project=big-query-sample-492309">コンソールを開く</a></td></tr>
+<tr><td class="num" style="text-align:left">送る</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><br><code>index.html</code></td><td>gtag.js 直書きでイベントを送る。仮ユーザーを切り替えて user_id と user_properties も送る</td><td>01・02章</td></tr>
+<tr><td class="num" style="text-align:left">送る</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><br><code>gtm.html</code></td><td>GTM 経由でイベントを送る。dataLayer の中身をその場で表示する</td><td>03・04章</td></tr>
+<tr><td class="num" style="text-align:left">見る</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">BigQuery ダッシュボード</a><br><code>dashboard.html</code></td><td>BigQuery の生データを SQL で集計する。実行した SQL と処理量も見られる</td><td>05〜07章</td></tr>
+<tr><td class="num" style="text-align:left">見る</td><td><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム ダッシュボード</a><br><code>realtime.html</code></td><td>GA4 Data API で過去30分を集計する。送ったリクエストも見られる</td><td>07章</td></tr>
+</tbody></table></div>
+<p>上の「データの流れ」の図の左端が「送る」ページ、右端が「見る」ページに当たります。</p>
+
+<h3>ファイルの配置</h3>
+<pre data-lang="tree"><code>/
+├── index.html        <span class="c"># 送る: テストサイト（gtag.js）</span>
+├── gtm.html          <span class="c"># 送る: GTM 練習ページ（GTM-KXV4CBBD）</span>
+├── dashboard.html    <span class="c"># 見る: BigQuery ダッシュボード</span>
+├── realtime.html     <span class="c"># 見る: リアルタイム ダッシュボード</span>
+├── docs/             <span class="c"># 学習ガイド（00〜07章）</span>
+│   └── assets/       <span class="c"># ガイド共通の CSS / JS</span>
+└── README.md         <span class="c"># 入口。各章とページへのリンク</span></code></pre>
+
+<h3>外部の管理画面</h3>
+<div class="table-wrap"><table>
+<thead><tr><th>サービス</th><th>リンク</th></tr></thead>
+<tbody>
 <tr><td>Google Analytics</td><td><a href="https://analytics.google.com/analytics/web/#/a235761773p324810718/reports/intelligenthome">プロパティを開く</a></td></tr>
+<tr><td>Google タグマネージャー</td><td><a href="https://tagmanager.google.com/">コンテナ GTM-KXV4CBBD</a></td></tr>
+<tr><td>BigQuery</td><td><a href="https://console.cloud.google.com/bigquery?project=big-query-sample-492309">コンソールを開く</a></td></tr>
+<tr><td>Looker Studio</td><td><a href="https://lookerstudio.google.com/reporting/3da2a9b6-1aa5-4c50-b2c1-fafaf4a64cdc/page/zB4BG">レポートを開く</a></td></tr>
 </tbody></table></div>
 
 <h3>GitHub Pages での公開</h3>
@@ -180,6 +187,7 @@
 <tr><td>GCP プロジェクトID</td><td><code>big-query-sample-492309</code></td><td>BigQuery のテーブル参照、API 呼び出し</td></tr>
 <tr><td>データセット</td><td><code>analytics_324810718</code></td><td>GA4 が自動作成。<code>analytics_</code> + プロパティID</td></tr>
 <tr><td>GA4 測定ID</td><td><code>G-FEHSK6QJLE</code></td><td>gtag.js、GTM の Google タグ</td></tr>
+<tr><td>GTM コンテナID</td><td><code>GTM-KXV4CBBD</code></td><td>gtm.html のスニペット</td></tr>
 <tr><td>GA4 プロパティID</td><td><code>324810718</code></td><td>Data API（realtime.html）</td></tr>
 <tr><td>リージョン</td><td><code>asia-northeast1</code>（東京）</td><td>BigQuery のデータの保存場所</td></tr>
 </tbody></table></div>

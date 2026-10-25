@@ -136,7 +136,7 @@
         min-height: 100vh;
       }
       header {
-        background: #1a73e8;
+        background: #2f5bb0;
         color: white;
         padding: 24px 40px;
         display: flex;
@@ -408,9 +408,62 @@
         margin-top: 12px;
         line-height: 1.6;
       }
+
+      /* サイト共通のメニュー（index / gtm / dashboard / realtime で同じ） */
+      .site-nav {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 6px;
+        background: #1c2738;
+        padding: 8px max(16px, 3vw);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .site-nav a {
+        color: #c9d4e6;
+        text-decoration: none;
+        padding: 3px 10px;
+        border-radius: 6px;
+        white-space: nowrap;
+      }
+      .site-nav a:hover {
+        background: #2c3a52;
+        color: #fff;
+      }
+      .site-nav a[aria-current="page"] {
+        background: #fff;
+        color: #1c2738;
+        font-weight: 700;
+      }
+      .site-nav .site-brand {
+        color: #fff;
+        font-weight: 700;
+        margin-right: 6px;
+      }
+      .site-nav .site-group {
+        color: #8a9ab4;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        margin-left: 8px;
+      }
+      .site-nav .site-guide {
+        margin-left: auto;
+        border: 1px solid #42526e;
+      }
     </style>
   </head>
   <body>
+    <div class="site-nav" role="navigation" aria-label="サイト内のページ">
+      <span class="site-brand">GA4 サンドボックス</span>
+      <span class="site-group">送る</span>
+      <a href="./" aria-current="page">テストサイト（gtag.js）</a>
+      <a href="./gtm.html">GTM 練習ページ</a>
+      <span class="site-group">見る</span>
+      <a href="./dashboard.html">BigQuery ダッシュボード</a>
+      <a href="./realtime.html">リアルタイム ダッシュボード</a>
+      <a class="site-guide" href="./docs/" target="_blank" rel="noopener">学習ガイド</a>
+    </div>
     <header>
       <div>
         <h1>GA4 × BigQuery テストサイト</h1>
@@ -418,16 +471,6 @@
           測定ID: G-FEHSK6QJLE ｜
           イベントを発火させてBigQueryへのデータ流入を確認しよう
         </p>
-      </div>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap">
-        <a href="./docs/" class="dashboard-link"> 📚 学習ガイド </a>
-        <a href="./gtm.html" class="dashboard-link"> 🏷️ GTM 練習ページ </a>
-        <a href="./realtime.html" class="dashboard-link">
-          ⚡ リアルタイム
-        </a>
-        <a href="./dashboard.html" class="dashboard-link">
-          📊 ダッシュボードを見る
-        </a>
       </div>
     </header>
 
@@ -464,19 +507,18 @@
               id="debug-toggle"
               onchange="toggleDebugMode(this.checked)"
             />
-            debug_mode（GA4のDebugViewで即時確認）
+            debug_mode を付ける（ep.debug_mode として送られるだけ）
           </label>
         </div>
 
         <p class="note">
           GA4管理画面での確認手順:<br />
-          ① <strong>DebugView</strong>（管理 → DebugView）→ debug_mode
-          ONのデバイスを選ぶと、イベントごとの user_id / user_properties
-          が数秒で見られます。<br />
+          ① <strong>DebugView</strong>（管理 › データの表示 › DebugView）: <a href="https://tagassistant.google.com">Tag Assistant</a>
+          で接続すると、イベントごとの user_id / user_properties が数秒で見られます。debug_mode のスイッチだけでは DebugView に出ません。<br />
           ② <strong>リアルタイム</strong>レポート →
           「比較を追加」で、カスタム定義に登録した <code>app_user_id</code> や
           <code>user_pattern</code> でユーザー単位に絞り込めます（要:
-          カスタムディメンション登録）。
+          カスタムディメンション登録）。手順は<a href="./docs/ga4-custom-dimensions.html" target="_blank" rel="noopener">02章</a>にあります。
         </p>
       </div>
 
@@ -494,7 +536,7 @@
             GA4タグが埋め込まれたテスト用ページです。下のボタンを押すと様々なイベントがGA4に送信され、BigQueryに蓄積されます。
           </p>
           <p>
-            GA4のリアルタイムレポートと、翌日以降のBigQueryデータで確認してみましょう。右上の「ダッシュボードを見る」からBigQueryのデータを可視化できます。
+            GA4のリアルタイムレポートと、翌日以降のBigQueryデータで確認してみましょう。上のメニューの「BigQuery ダッシュボード」「リアルタイム ダッシュボード」から集計結果を見られます。
           </p>
         </div>
 

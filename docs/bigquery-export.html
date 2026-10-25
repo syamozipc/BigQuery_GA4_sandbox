@@ -27,7 +27,7 @@
 <a data-page="bigquery-export" href="bigquery-export.html"><span class="no">06</span><span>GA4データをBigQueryへ</span></a>
 <a data-page="visualize" href="visualize.html"><span class="no">07</span><span>可視化とAPI</span></a>
 </nav>
-<div class="side-links"><p>練習用のページ</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム</a></div>
+<div class="side-links"><p>送る（計測する）</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/">テストサイト（gtag.js）</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/gtm.html">GTM 練習ページ</a><p>見る（集計する）</p><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/dashboard.html">BigQuery ダッシュボード</a><a href="https://syamozipc.github.io/BigQuery_GA4_sandbox/realtime.html">リアルタイム ダッシュボード</a></div>
 </aside>
 <main>
 <div class="content">
@@ -150,7 +150,8 @@ platform, stream_id        'WEB', データストリームID</code></pre>
 SELECT ep.value.string_value AS page_location, COUNT(*) AS pageviews
 FROM `big-query-sample-492309.analytics_324810718.events_*`,
   UNNEST(event_params) AS ep
-WHERE _TABLE_SUFFIX BETWEEN '20260301' AND '20260401'
+WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE('Asia/Tokyo'), INTERVAL 7 DAY))
+                        AND FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))
   AND event_name = 'page_view'
   AND ep.key = 'page_location'
 GROUP BY page_location;
@@ -161,7 +162,8 @@ SELECT
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'button_name') AS button_name,
   (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'section') AS section
 FROM `big-query-sample-492309.analytics_324810718.events_*`
-WHERE _TABLE_SUFFIX BETWEEN '20260301' AND '20260401'
+WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE('Asia/Tokyo'), INTERVAL 7 DAY))
+                        AND FORMAT_DATE('%Y%m%d', CURRENT_DATE('Asia/Tokyo'))
   AND event_name = 'button_click';</code></pre>
 <p>書き方2なら1イベント1行のまま、パラメータを列として並べられます。行が増えないので集計を間違えにくいです。</p>
 
